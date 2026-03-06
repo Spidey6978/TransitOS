@@ -1,0 +1,4 @@
+python -m uvicorn backend.main:app --reload
+source venv/bin/activate
+streamlit run frontend/dashboard.py
+python3 scripts/simulate_traffic.py
