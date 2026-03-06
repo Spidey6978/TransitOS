@@ -10,7 +10,7 @@ def simulate_commuter():
     mode = random.choice(["Hybrid", "Metro-Only", "Bus-Only"])
     
     payload = {
-        "commuter_id": f"Bot_{random.randint(100,999)}",
+        "commuter_name": f"Bot_{random.randint(100,999)}",
         "from_station": station,
         "to_station": "Dadar", # Simplification
         "mode": mode
