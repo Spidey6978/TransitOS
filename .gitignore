@@ -1,0 +1,16 @@
+# Secrets - NEVER commit these
+.env
+
+# Database (local only, don't push)
+*.db
+
+# Python cache
+__pycache__/
+*.pyc
+*.pyo
+venv/
+.venv/
+
+# IDE
+.vscode/
+.idea/
