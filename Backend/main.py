@@ -6,9 +6,12 @@ from datetime import datetime
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
-from mumbai_data import MUMBAI_LOCATIONS, get_coords
+
+# Absolute import from the Backend folder
+from Backend.mumbai_data import MUMBAI_LOCATIONS, get_coords
+
 app = FastAPI(title="TransitOS Kernel")
-DB_FILE = "transitos.db"
+DB_FILE = "Backend/transitos.db" # Updated to save inside Backend folder
 
 app.add_middleware(
     CORSMiddleware,
