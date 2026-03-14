@@ -22,7 +22,7 @@ w3 = Web3(Web3.HTTPProvider(
 account = w3.eth.account.from_key(os.getenv("PRIVATE_KEY"))
 
 # ── Load the ABI ─────────────────────────────────────────
-with open("ABI.json") as f:
+with open("abi.json") as f:
     abi = json.load(f)
 
 # ── Load the contract ────────────────────────────────────
