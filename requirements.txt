@@ -4,6 +4,7 @@ streamlit
 pandas
 requests
 pydeck
+plotly
 pydantic
 watchdog
 web3==6.15.1
