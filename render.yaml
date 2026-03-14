@@ -1,0 +1,13 @@
+services:
+  - type: web
+    name: transitos-backend
+    env: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: python -m uvicorn Backend.main:app --host 0.0.0.0 --port 8000
+    envVars:
+      - key: ALCHEMY_RPC_URL
+        sync: false
+      - key: PRIVATE_KEY
+        sync: false
+      - key: CONTRACT_ADDRESS
+        sync: false

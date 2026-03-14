@@ -3,7 +3,7 @@ import hashlib
 import random
 import math
 from datetime import datetime
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
 from pydantic import BaseModel
 from mumbai_data import MUMBAI_LOCATIONS, get_coords
@@ -14,7 +14,7 @@ from slowapi import Limiter
 from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
 from fastapi.responses import JSONResponse
-
+from web3_bridge import settle_trip, check_connection
 load_dotenv() 
 
 app = FastAPI(title="TransitOS Kernel")
@@ -47,9 +47,15 @@ def init_db():
                 start_lat REAL,
                 start_lng REAL,
                 end_lat REAL,
-                end_lng REAL
+                end_lng REAL,
+                status TEXT DEFAULT 'confirmed'
             )
         """)
+        # Phase 3: Add status column to existing DB if it doesn't have it yet
+        try:
+            c.execute("ALTER TABLE ledger ADD COLUMN status TEXT DEFAULT 'confirmed'")
+        except:
+            pass  # Column already exists — that's fine
         conn.commit()
 
 init_db()
@@ -106,33 +112,50 @@ def rate_limit_handler(request, exc):
 
 @app.post("/book_ticket", response_model=TicketResponse)
 @limiter.limit("30/minute")
-def book_ticket(request: TicketRequest):
-    start_coords = get_coords(request.from_station)
-    end_coords = get_coords(request.to_station)
+def book_ticket(request: Request, ticket: TicketRequest):
+    start_coords = get_coords(ticket.from_station)
+    end_coords = get_coords(ticket.to_station)
     
     # Calculate physics
     dist = haversine(start_coords, end_coords)
     base_fare = 10
     fare = base_fare + (dist * 2) # ₹2 per KM
-    if "AC" in request.mode: fare *= 1.5
+    if "AC" in ticket.mode: fare *= 1.5
     
-    split_info = calculate_split(fare, request.mode)
-    
-    # Blockchain Hash
-    tx_data = f"{request.commuter_name}{datetime.now()}{fare}"
-    #tx_hash = "0x" + hashlib.sha256(tx_data.encode()).hexdigest()[:16]
-    tx_hash = settle_fare(request.commuter_name, fare)
+    split_info = calculate_split(fare, ticket.mode)
 
+    # Blockchain Hash
+    tx_data = f"{ticket.commuter_name}{datetime.now()}{fare}"
+    #tx_hash = "0x" + hashlib.sha256(tx_data.encode()).hexdigest()[:16]
+
+    # Phase 3: try/except — DB is never written if Web3 fails
+    try:
+        tx_hash = settle_trip(
+            ticket.commuter_name,
+            ticket.from_station,
+            ticket.to_station,
+            ticket.mode,
+            fare
+        )
+    except Exception as e:
+        # Web3 failed — raise error, nothing gets saved to DB
+        raise HTTPException(
+            status_code=500,
+            detail=f"Blockchain transaction failed: {str(e)}"
+        )
+
+    # Only reaches here if Web3 succeeded
     with sqlite3.connect(DB_FILE) as conn:
         c = conn.cursor()
         c.execute("""
-            INSERT INTO ledger VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+            INSERT INTO ledger VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
         """, (
-            tx_hash, datetime.now(), request.commuter_name,
-            request.from_station, request.to_station, request.mode,
+            tx_hash, datetime.now(), ticket.commuter_name,
+            ticket.from_station, ticket.to_station, ticket.mode,
             round(dist, 2), round(fare, 2), split_info,
             start_coords[1], start_coords[0], # Lat, Lng
-            end_coords[1], end_coords[0]      # Lat, Lng
+            end_coords[1], end_coords[0],     # Lat, Lng
+            "confirmed"                        # Phase 3: status column
         ))
         conn.commit()
 
@@ -141,8 +164,8 @@ def book_ticket(request: TicketRequest):
         tx_hash      = tx_hash,
         fare         = round(fare, 2),
         split        = split_info,
-        from_station = request.from_station,
-        to_station   = request.to_station,
+        from_station = ticket.from_station,
+        to_station   = ticket.to_station,
         distance_km  = round(dist, 2)
     )
 
@@ -159,56 +182,69 @@ def sync_offline(payload: OfflineSyncPayload):
     """
     Receives a batch of tickets that were queued while the device was offline.
     Phase 1: Saves each ticket to SQLite with a dummy hash.
-    Phase 3: Each ticket will be pushed to Web3 via web3_bridge.py.
+    Phase 2: Each ticket pushed to Web3 via web3_bridge.py.
+    Phase 3: DB rollback if Web3 fails — data consistency guaranteed.
     """
     results = []
 
-    with sqlite3.connect(DB_FILE) as conn:
-        c = conn.cursor()
+    # Phase 3: Each ticket gets its own DB connection inside try block
+    # If settle_trip() fails, the DB write never happens for that ticket
+    for ticket in payload.tickets:
+        try:
+            # Get coordinates
+            start_coords = get_coords(ticket.from_station)
+            end_coords   = get_coords(ticket.to_station)
 
-        for ticket in payload.tickets:
-            try:
-                # Get coordinates
-                start_coords = get_coords(ticket.from_station)
-                end_coords   = get_coords(ticket.to_station)
+            # Calculate fare (same logic as /book_ticket)
+            dist      = haversine(start_coords, end_coords)
+            fare      = 10 + (dist * 2)
+            if "AC" in ticket.mode:
+                fare *= 1.5
+            split_info = calculate_split(fare, ticket.mode)
 
-                # Calculate fare (same logic as /book_ticket)
-                dist      = haversine(start_coords, end_coords)
-                fare      = 10 + (dist * 2)
-                if "AC" in ticket.mode:
-                    fare *= 1.5
-                split_info = calculate_split(fare, ticket.mode)
+            # Phase 2: Real Web3 transaction
+            tx_data  = f"{ticket.commuter_name}{datetime.now()}{fare}"
+            #tx_hash  = "0x" + hashlib.sha256(tx_data.encode()).hexdigest()[:16]
 
-                # Generate mock hash for Phase 1
-                tx_data  = f"{ticket.commuter_name}{datetime.now()}{fare}"
-                #tx_hash  = "0x" + hashlib.sha256(tx_data.encode()).hexdigest()[:16]
-                tx_hash = settle_fare(request.commuter_name, fare)
+            # Phase 3: settle_trip MUST succeed before DB is written
+            tx_hash = settle_trip(
+                ticket.commuter_name,
+                ticket.from_station,
+                ticket.to_station,
+                ticket.mode,
+                fare
+            )
 
+            # Phase 3: DB write is inside try block
+            # If settle_trip() failed above, this never executes
+            with sqlite3.connect(DB_FILE) as conn:
+                c = conn.cursor()
                 c.execute("""
-                    INSERT OR IGNORE INTO ledger VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    INSERT OR IGNORE INTO ledger VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """, (
                     tx_hash, datetime.now(), ticket.commuter_name,
                     ticket.from_station, ticket.to_station, ticket.mode,
                     round(dist, 2), round(fare, 2), split_info,
                     start_coords[1], start_coords[0],
-                    end_coords[1], end_coords[0]
+                    end_coords[1], end_coords[0],
+                    "confirmed"  # Phase 3: status column
                 ))
+                conn.commit()
 
-                results.append({
-                    "commuter": ticket.commuter_name,
-                    "tx_hash": tx_hash,
-                    "status": "saved"
-                })
+            results.append({
+                "commuter": ticket.commuter_name,
+                "tx_hash": tx_hash,
+                "status": "confirmed"  # Phase 3: was "saved", now "confirmed"
+            })
 
-            except Exception as e:
-                # Don't crash the whole batch — log and continue
-                results.append({
-                    "commuter": ticket.commuter_name,
-                    "tx_hash": None,
-                    "status": f"failed: {str(e)}"
-                })
-
-        conn.commit()
+        except Exception as e:
+            # Phase 3: Web3 failed — DB never touched for this ticket
+            # Don't crash the whole batch — log and continue to next ticket
+            results.append({
+                "commuter": ticket.commuter_name,
+                "tx_hash": None,
+                "status": f"failed: {str(e)}"
+            })
 
     return SyncResponse(
         status         = "queued",
@@ -222,7 +258,7 @@ def health_check():
     return {
         "status": "online",
         "database": "connected",
-        "web3_bridge": "pending_abi"
+        "web3_bridge": "connected" if check_connection() else "disconnected"
     }
 
 @app.get("/stats")
@@ -235,8 +271,19 @@ def get_stats():
         total_revenue = c.fetchone()[0] or 0
         c.execute("SELECT COUNT(DISTINCT commuter_name) FROM ledger")
         unique_commuters = c.fetchone()[0]
+        # Phase 4: Count confirmed vs failed transactions
+        c.execute("SELECT COUNT(*) FROM ledger WHERE status = 'confirmed'")
+        confirmed = c.fetchone()[0]
+
+    # Phase 4: Pull real on-chain revenue from contract
+    from web3_bridge import get_transitOS_revenue
+    onchain_revenue_paise = get_transitOS_revenue()
+    onchain_revenue_inr = round(onchain_revenue_paise / 100, 2)
+
     return {
         "total_tickets": total_tickets,
         "total_revenue_inr": round(total_revenue, 2),
-        "unique_commuters": unique_commuters
+        "unique_commuters": unique_commuters,
+        "confirmed_transactions": confirmed,              # Phase 4
+        "onchain_transitOS_revenue_inr": onchain_revenue_inr  # Phase 4
     }

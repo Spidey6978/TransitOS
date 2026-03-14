@@ -1,0 +1,61 @@
+[
+  {
+    "inputs": [],
+    "stateMutability": "nonpayable",
+    "type": "constructor"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      { "indexed": false, "internalType": "string", "name": "commuterName", "type": "string" },
+      { "indexed": false, "internalType": "string", "name": "fromStation", "type": "string" },
+      { "indexed": false, "internalType": "string", "name": "toStation", "type": "string" },
+      { "indexed": false, "internalType": "string", "name": "mode", "type": "string" },
+      { "indexed": false, "internalType": "uint256", "name": "totalFare", "type": "uint256" },
+      { "indexed": false, "internalType": "uint256", "name": "transitOsShare", "type": "uint256" }
+    ],
+    "name": "TripSettled",
+    "type": "event"
+  },
+  {
+    "inputs": [{ "internalType": "string", "name": "operatorName", "type": "string" }],
+    "name": "getOperatorBalance",
+    "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [{ "internalType": "string", "name": "", "type": "string" }],
+    "name": "operatorBalances",
+    "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "owner",
+    "outputs": [{ "internalType": "address", "name": "", "type": "address" }],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      { "internalType": "string", "name": "commuterName", "type": "string" },
+      { "internalType": "string", "name": "fromStation", "type": "string" },
+      { "internalType": "string", "name": "toStation", "type": "string" },
+      { "internalType": "string", "name": "mode", "type": "string" },
+      { "internalType": "uint256", "name": "totalFare", "type": "uint256" }
+    ],
+    "name": "settleTrip",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "transitOsRevenue",
+    "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+    "stateMutability": "view",
+    "type": "function"
+  }
+]

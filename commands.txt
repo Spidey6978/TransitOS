@@ -4,3 +4,7 @@ streamlit run frontend/dashboard.py
 python3 scripts/simulate_traffic.py
 python -m venv .venv (windows)
 .venv\Scripts\activate (windows)
+Set-ExecutionPolicy -ExecutionPolicy RemoteSigned -Scope CurrentUser 
+.\.venv\Scripts\Activate.ps1
+python -m pip install web3  
+python -c "from web3_bridge import check_connection; print('Connected:', check_connection())"

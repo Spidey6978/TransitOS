@@ -220,3 +220,19 @@ sqlalchemy
 - **`transitos.db` is local only** — it's in `.gitignore`, each dev runs their own instance
 - **`INSERT OR IGNORE`** in `/sync_offline` prevents duplicate tickets if a user retries an offline sync
 - The `web3_bridge.py` currently returns stub hashes — this is intentional until Phase 2
+
+### ✅ Phase 2 — Complete (Days 4–6)
+- [x] web3.py installed and configured
+- [x] Alchemy RPC URL connected to Polygon Amoy
+- [x] web3_bridge.py filled with real settle_trip() logic
+- [x] Real blockchain transactions working and verified on Polygonscan
+
+### ✅ Phase 3 — Complete (Days 7–9)
+- [x] /sync_offline tested with real batch — 3 tickets, 3 real tx hashes
+- [x] status column added to ledger table
+- [x] DB rollbacks working — failed Web3 tx never writes to SQLite
+
+### ⏳ Phase 4 — In Progress (Days 10–14)
+- [x] RPC calls optimized with timeout
+- [x] /stats shows on-chain revenue
+- [ ] Deploy to Render
