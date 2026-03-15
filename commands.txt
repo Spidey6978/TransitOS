@@ -1,7 +1,7 @@
-python -m uvicorn backend.main:app --reload
+python -m uvicorn Backend.main:app --reload
 source venv/bin/activate
 streamlit run Frontend/dashboard.py
-python3 scripts/simulate_traffic.py
+python3 Scripts/simulate_traffic.py
 python -m venv .venv (windows)
 .venv\Scripts\activate (windows)
 taskkill /F /IM python.exe for any lingering tasks in the terminal (wont close venv dw)
