@@ -106,6 +106,10 @@ def rate_limit_handler(request, exc):
 @app.post("/book_ticket", response_model=TicketResponse)
 @limiter.limit("30/minute")
 def book_ticket(request: Request, ticket: TicketRequest):
+    # --- THE GHOST SHIELD ---
+    if ticket.from_station not in MUMBAI_LOCATIONS or ticket.to_station not in MUMBAI_LOCATIONS:
+        raise HTTPException(status_code=400, detail=f"Invalid route: {ticket.from_station} to {ticket.to_station} does not exist.")
+
     start_coords = get_coords(ticket.from_station)
     end_coords = get_coords(ticket.to_station)
     
@@ -146,6 +150,10 @@ def sync_offline(payload: OfflineSyncPayload):
         c = conn.cursor()
         for ticket in payload.tickets:
             try:
+                # --- THE GHOST SHIELD (Offline Version) ---
+                if ticket.from_station not in MUMBAI_LOCATIONS or ticket.to_station not in MUMBAI_LOCATIONS:
+                    raise Exception(f"Invalid route: {ticket.from_station} to {ticket.to_station}")
+
                 start_coords = get_coords(ticket.from_station)
                 end_coords = get_coords(ticket.to_station)
                 dist = haversine(start_coords, end_coords)
