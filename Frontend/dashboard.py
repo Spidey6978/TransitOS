@@ -450,3 +450,22 @@ if not df.empty:
             use_container_width=True,
             height=290,
         )
+
+# --- AUTO-REFRESH CONTROLS & LOGIC ---
+# This block handles both the definition of variables and the rerun logic.
+# Paste this at the very bottom of your dashboard.py file.
+
+with st.sidebar:
+    st.markdown("---")
+    st.markdown("### 🛰️ Live Sync Control")
+    # We use st.toggle and st.slider here to define the variables locally 
+    # so the rest of the script doesn't throw a NameError.
+    live_mode = st.toggle("Satellite Link", value=True, help="Auto-pull data from blockchain")
+    refresh_rate = st.slider("Refresh Rate (s)", 1, 10, 3)
+
+if live_mode:
+    # This prevents the app from refreshing too fast and crashing the browser
+    time.sleep(refresh_rate)
+    st.rerun()
+    #remove lines 454 to 469 if it doesnt work cuz it worked before those lines were added
+    #and i didnt check if it still worked after adding those lines
