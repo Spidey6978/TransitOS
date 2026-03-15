@@ -1,44 +1,65 @@
 import requests
-import time
 import random
+import time
+import uuid
 
-# Pointing to Dev 2's FastAPI backend
+# Target the local endpoint (since this script runs on the same laptop as the API)
 API_URL = "http://localhost:8000/book_ticket"
-STATIONS = ["Churchgate", "Dadar", "Bandra", "Andheri", "Borivali", "Ghatkopar", "Thane"]
-MODES = ["Local Train", "Metro", "AC Metro", "Hybrid", "Ferry"]
+STATIONS_URL = "http://localhost:8000/stations"
 
-def send_commuter():
-    start = random.choice(STATIONS)
-    end = random.choice(STATIONS)
-    while start == end: 
-        end = random.choice(STATIONS)
-        
-    payload = {
-        "commuter_name": f"DemoUser_{random.randint(1000,9999)}",
-        "from_station": start,
-        "to_station": end,
-        "mode": random.choice(MODES)
-    }
+def run_simulator(delay_seconds=3):
+    print("🚦 Booting TransitOS Live Traffic Simulator...")
     
+    # 1. Fetch valid stations from the Kernel
     try:
-        print(f"📡 Routing {payload['commuter_name']} ({start} -> {end}) via {payload['mode']}...")
-        res = requests.post(API_URL, json=payload)
-        
-        if res.status_code == 200:
-            data = res.json()
-            print(f"✅ Settled! Hash: {data.get('tx_hash')} | Fare: ₹{data.get('fare')}")
-        elif res.status_code == 429:
-            print("⚠️ Rate Limit Hit! Throttling down...")
-            time.sleep(5) # Penalty sleep
-        else:
-            print(f"❌ Server Error: {res.text}")
-            
+        valid_stations = requests.get(STATIONS_URL).json()
+        print(f"✅ Loaded {len(valid_stations)} stations from the DB.")
     except Exception as e:
-        print(f"🚨 Network Error: {e}")
+        print(f"🚨 Kernel unreachable! Is Uvicorn running? Error: {e}")
+        return
+
+    modes = ["Local Train", "Metro", "Hybrid", "AC Local"]
+
+    print(f"⚡ Commencing infinite traffic loop ({delay_seconds}s delay). Press Ctrl+C to stop.\n")
+    
+    ticket_count = 0
+    while True:
+        try:
+            start = random.choice(valid_stations)
+            end = random.choice([s for s in valid_stations if s != start])
+            
+            # 2. The Idempotency Key (UUID)
+            payload = {
+                "ticket_id": uuid.uuid4().hex,  # Generates a unique ID every single loop!
+                "commuter_name": f"SimNode_{random.randint(1000, 9999)}",
+                "from_station": start,
+                "to_station": end,
+                "mode": random.choice(modes)
+            }
+            
+            # 3. Fire the request
+            res = requests.post(API_URL, json=payload)
+            
+            if res.status_code == 200:
+                data = res.json()
+                ticket_count += 1
+                status = "💎" if "0x" in str(data.get('tx_hash')) else "✅"
+                print(f"[{ticket_count}] {status} {start} -> {end} | Fare: ₹{data['fare']} | Tx: {data['tx_hash'][:12]}...")
+            elif res.status_code == 429:
+                print(f"⏳ Rate Limited! Slowing down...")
+                time.sleep(5) # Back off if we hit the 30/min limit
+            else:
+                print(f"⚠️ Blocked: {res.status_code} - {res.text}")
+                
+            time.sleep(delay_seconds)
+            
+        except KeyboardInterrupt:
+            print("\n🛑 Simulator terminated by user.")
+            break
+        except Exception as e:
+            print(f"🚨 Network drop: {e}")
+            time.sleep(5) 
 
 if __name__ == "__main__":
-    print("🚀 Booting TransitOS Load Tester (Rate Limit Compliant)...")
-    while True:
-        send_commuter()
-        # Sleep for 2.5 seconds (Guarantees max 24 requests/minute, safely under the 30 limit)
-        time.sleep(2.5)
+    # Adjust this delay to control how fast the map updates
+    run_simulator(delay_seconds=3)

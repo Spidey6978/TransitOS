@@ -6,6 +6,7 @@ class TicketRequest(BaseModel):
     from_station: str
     to_station: str
     mode: str
+    ticket_id: str  # Add this! Every ticket must now have a unique ID
 
 class TicketResponse(BaseModel):
     status: str

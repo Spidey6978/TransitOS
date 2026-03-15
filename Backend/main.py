@@ -20,8 +20,6 @@ from Backend.web3_bridge import settle_trip_on_chain
 
 load_dotenv() 
 
-print(f"DEBUG: Alchemy URL is {'Set' if os.getenv('ALCHEMY_RPC_URL') else 'MISSING'}")
-
 app = FastAPI(title="TransitOS Kernel")
 limiter = Limiter(key_func=get_remote_address)
 app.state.limiter = limiter
@@ -51,7 +49,8 @@ def init_db():
                 start_lat REAL,
                 start_lng REAL,
                 end_lat REAL,
-                end_lng REAL
+                end_lng REAL,
+                ticket_id TEXT UNIQUE
             )
         """)
         conn.commit()
@@ -102,13 +101,21 @@ def reset_database():
 def rate_limit_handler(request, exc):
     return JSONResponse(status_code=429, content={"error": "Too many requests"})
 
-# --- FIX: Added 'request: Request' so SlowAPI can track the caller ---
 @app.post("/book_ticket", response_model=TicketResponse)
 @limiter.limit("30/minute")
 def book_ticket(request: Request, ticket: TicketRequest):
     # --- THE GHOST SHIELD ---
     if ticket.from_station not in MUMBAI_LOCATIONS or ticket.to_station not in MUMBAI_LOCATIONS:
         raise HTTPException(status_code=400, detail=f"Invalid route: {ticket.from_station} to {ticket.to_station} does not exist.")
+
+    # --- THE IDEMPOTENCY SHIELD ---
+    with sqlite3.connect(DB_FILE) as conn:
+        c = conn.cursor()
+        # FIX 1: Check ticket_id explicitly
+        c.execute("SELECT 1 FROM ledger WHERE ticket_id = ? LIMIT 1", (ticket.ticket_id,))
+        # FIX 2: Actually block the request if a duplicate is found!
+        if c.fetchone():
+            raise HTTPException(status_code=409, detail=f"Duplicate request blocked. Ticket ID {ticket.ticket_id} already processed.")
 
     start_coords = get_coords(ticket.from_station)
     end_coords = get_coords(ticket.to_station)
@@ -117,7 +124,7 @@ def book_ticket(request: Request, ticket: TicketRequest):
     fare = 10 + (dist * 2)
     if "AC" in ticket.mode: fare *= 1.5
     split_info = calculate_split(fare, ticket.mode)
-    
+
     # Bridge to the Blockchain logic
     tx_hash = settle_trip_on_chain(
         ticket.commuter_name, 
@@ -129,11 +136,13 @@ def book_ticket(request: Request, ticket: TicketRequest):
 
     with sqlite3.connect(DB_FILE) as conn:
         c = conn.cursor()
-        c.execute("INSERT INTO ledger VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", (
+        # FIX 3: Add the 14th placeholder (?) and ticket.ticket_id to the insert
+        c.execute("INSERT INTO ledger VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", (
             tx_hash, datetime.now(), ticket.commuter_name,
             ticket.from_station, ticket.to_station, ticket.mode,
             round(dist, 2), round(fare, 2), split_info,
-            start_coords[1], start_coords[0], end_coords[1], end_coords[0]
+            start_coords[1], start_coords[0], end_coords[1], end_coords[0],
+            ticket.ticket_id
         ))
         conn.commit()
 
@@ -169,11 +178,14 @@ def sync_offline(payload: OfflineSyncPayload):
                     fare
                 )
 
-                c.execute("INSERT OR IGNORE INTO ledger VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", (
+                # FIX: Because ticket_id is UNIQUE in the DB, "INSERT OR IGNORE" acts as 
+                # a built-in idempotency shield for the offline sync loop!
+                c.execute("INSERT OR IGNORE INTO ledger VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", (
                     tx_hash, datetime.now(), ticket.commuter_name,
                     ticket.from_station, ticket.to_station, ticket.mode,
                     round(dist, 2), round(fare, 2), split_info,
-                    start_coords[1], start_coords[0], end_coords[1], end_coords[0]
+                    start_coords[1], start_coords[0], end_coords[1], end_coords[0],
+                    ticket.ticket_id
                 ))
                 results.append({"commuter": ticket.commuter_name, "tx_hash": tx_hash, "status": "saved"})
             except Exception as e:
