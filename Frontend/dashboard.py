@@ -503,5 +503,8 @@ with st.sidebar:
     refresh_rate = st.slider("Frequency (s)", 1, 10, 3)
     
 if live_mode:
+    # This prevents the app from refreshing too fast and crashing the browser
     time.sleep(refresh_rate)
     st.rerun()
+    #remove lines 454 to 469 if it doesnt work cuz it worked before those lines were added
+    #and i didnt check if it still worked after adding those lines
