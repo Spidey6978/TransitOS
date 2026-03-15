@@ -1,4 +1,4 @@
-ONLY PUSH TESTED CODE IN THIS BRANCH ELSE STUFF WILL BREAK. Rn it contains a proper tested and deployed version of the model - still a WIP cuz UI is missing.
+USe this branch to test any additional features you wish to add. Only open a PR if the code doesnt break after adding that feature. DO NOT TRY TO MERGE WITH MASTER DIRECTLY
 
 first run the virtual env commands in the commands.txt then install them using pip install -r requirements.txt
 wait for the installation to complete and proceed
