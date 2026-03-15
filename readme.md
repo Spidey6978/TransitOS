@@ -1,3 +1,5 @@
+ONLY PUSH TESTED CODE IN THIS BRANCH ELSE STUFF WILL BREAK. Rn it contains a proper tested and deployed version of the model - still a WIP cuz UI is missing.
+
 first run the virtual env commands in the commands.txt then install them using pip install -r requirements.txt
 wait for the installation to complete and proceed
 
