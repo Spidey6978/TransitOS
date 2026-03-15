@@ -1,7 +1,10 @@
-python -m uvicorn Backend.main:app --reload
+python -m uvicorn backend.main:app --reload
+python -m uvicorn Backend.main:app --port 8000 (proper deployment with ngrok - no localhost)
 source venv/bin/activate
 streamlit run Frontend/dashboard.py
 python3 Scripts/simulate_traffic.py
 python -m venv .venv (windows)
 .venv\Scripts\activate (windows)
-taskkill /F /IM python.exe for any lingering tasks in the terminal (wont close venv dw)
+taskkill /F /IM python.exe (for any lingering tasks in the terminal) (wont close venv dw)
+ngrok http --domain=touchily-steamerless-alyssa.ngrok-free.dev 8000 (considering getting ngrok paid tier)
+https://touchily-steamerless-alyssa.ngrok-free.dev/docs (check the backend kernel here)

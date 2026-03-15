@@ -8,7 +8,7 @@ def trigger_ghost_station():
     
     # Notice the fake stations
     poison_payload = {
-        "commuter_name": "Phantom_User_99",
+        "commuter_name": "SilverWolf999",
         "from_station": "Atlantis Sub-Level 4",
         "to_station": "Gotham City Central",
         "mode": "Metro"

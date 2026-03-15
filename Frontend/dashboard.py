@@ -5,6 +5,7 @@ import pydeck as pdk
 import plotly.graph_objects as go
 import time
 import requests
+from datetime import datetime
 
 st.set_page_config(
     page_title="TransitOS",
@@ -22,6 +23,7 @@ html, body, [class*="css"] {
     background-color: #030712 !important;
     color: #e2e8f0 !important;
 }
+
 .main::before {
     content: '';
     position: fixed;
@@ -130,17 +132,41 @@ hr { border: none !important; border-top: 1px solid rgba(0,255,170,0.1) !importa
 .stat-card { background: linear-gradient(135deg,rgba(0,255,170,0.03),rgba(0,207,255,0.05)); border: 1px solid rgba(0,207,255,0.15); border-radius: 10px; padding: 0.9rem 1.1rem; margin-bottom: 0.6rem; }
 .stat-card-label { font-family: 'Share Tech Mono', monospace; font-size: 0.6rem; letter-spacing: 0.2em; text-transform: uppercase; color: #475569; margin-bottom: 0.15rem; }
 .stat-card-value { font-family: 'Rajdhani', sans-serif; font-size: 1.5rem; font-weight: 700; color: #00cfff; }
+.legend-row {
+    display: flex;
+    gap: 20px;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.7rem;
+    color: #64748b;
+    margin: 10px 0;
+}
+.legend-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; margin-right: 5px; }
+
+/* Custom red button styling for the Emergency Reset */
+div.stButton > button {
+    background-color: rgba(255, 45, 45, 0.1);
+    color: #ff2d2d;
+    border: 1px solid rgba(255, 45, 45, 0.5);
+    width: 100%;
+    font-family: 'Share Tech Mono', monospace;
+    letter-spacing: 0.1em;
+}
+div.stButton > button:hover {
+    background-color: rgba(255, 45, 45, 0.2);
+    border: 1px solid #ff2d2d;
+    color: #fff;
+}
 </style>
 """, unsafe_allow_html=True)
 
 # ── data connection ────────────────────────────────────────────────────────────
-import requests
+
+BASE_URL = "https://touchily-steamerless-alyssa.ngrok-free.dev"
 
 @st.cache_data(ttl=2)
 def load_data():
     try:
-        # Fetch live data from Dev 2's Blockchain Backend
-        res = requests.get("http://localhost:8000/ledger_live")
+        res = requests.get(f"{BASE_URL}/ledger_live", timeout=2)
         if res.status_code != 200:
             return pd.DataFrame()
             
@@ -149,7 +175,6 @@ def load_data():
             return df
 
         # Rename Dev 2's API columns to match Dev 4's PyDeck map logic
-        # FIX: Dev 2 uses 'lng', Dev 4 originally used 'lon'
         df = df.rename(columns={
             "start_lat": "olat",
             "start_lng": "olng",
@@ -160,7 +185,20 @@ def load_data():
     except Exception:
         return pd.DataFrame()
 
+@st.cache_data(ttl=2)
+def fetch_stats():
+    """NEW: Fetches overarching system stats from the backend."""
+    try:
+        res = requests.get(f"{BASE_URL}/stats", timeout=2)
+        if res.status_code == 200:
+            return res.json()
+    except Exception:
+        pass
+    # Fallback if the server is unreachable
+    return {"total_tickets": 0, "total_revenue_inr": 0, "unique_commuters": 0}
+
 df = load_data()
+global_stats = fetch_stats()
 
 # Short alias constants matching renamed columns
 OLAT = "olat"
@@ -181,7 +219,9 @@ with st.sidebar:
     st.markdown("## ⚡ TransitOS")
     st.markdown('<div class="status-badge"><span class="pulse-dot"></span>Live Monitoring</div>', unsafe_allow_html=True)
     st.markdown("---")
-    st.metric("Total Events",   f"{total_events:,}")
+    
+    # NEW: Updated to use global stats for total ticket count
+    st.metric("Total Events",   f"{global_stats['total_tickets']:,}")
     st.metric("Active Origins", f"{active_origins:,}")
     st.metric("Destinations",   f"{unique_dest:,}")
     st.markdown("---")
@@ -208,9 +248,10 @@ st.markdown(
 )
 
 c1, c2, c3, c4 = st.columns(4)
-c1.metric("Total Events",        f"{total_events:,}",   delta="Live")
-c2.metric("Active Origins",      f"{active_origins:,}", delta=f"+{active_origins} nodes")
-c3.metric("Unique Destinations", f"{unique_dest:,}")
+# NEW: KPIs updated to show actual revenue and unique nodes
+c1.metric("Confirmed Trips",     f"{global_stats['total_tickets']:,}",   delta="Live")
+c2.metric("Revenue (INR)",       f"₹{global_stats['total_revenue_inr']:,}", delta="Verified")
+c3.metric("Unique Nodes",        f"{global_stats['unique_commuters']:,}")
 c4.metric("Network Load",        f"{congestion_pct}%",  delta="Nominal" if congestion_pct < 80 else "High")
 
 st.markdown("---")
@@ -219,7 +260,7 @@ st.markdown("---")
 # MAP
 # ══════════════════════════════════════════════════════════════════════════════
 if df.empty:
-    st.warning("⚠ No traffic data detected. Start the simulator to populate the feed.")
+    st.warning("⚠ No traffic data detected. Awaiting live telemetry...")
 else:
     st.markdown("### Live Traffic Map")
 
@@ -233,24 +274,19 @@ else:
         lambda c: "Clear" if c <= low_t else ("Moderate" if c <= high_t else "Heavy")
     )
 
-    # ── split into 3 subsets — one LineLayer per colour ────────────────────────
-    # FIX: Per-row color columns in pydeck are unreliable; use separate layers per color
     df_clear    = df[df["_status"] == "Clear"].copy()
     df_moderate = df[df["_status"] == "Moderate"].copy()
     df_heavy    = df[df["_status"] == "Heavy"].copy()
 
-    # FIX: Pass color as a plain 4-element list — NOT as a concatenated variable.
-    # PyDeck serialises layer kwargs directly; list literals are safe.
     def make_line_layers(data, r, g, b):
-        """Return (glow_layer, line_layer) for a data subset; (None, None) if empty."""
         if data is None or data.empty:
             return None, None
         glow = pdk.Layer(
             "LineLayer",
             data=data,
-            get_source_position=[OLNG, OLAT],   # FIX: simple col names, no spaces
+            get_source_position=[OLNG, OLAT], 
             get_target_position=[DLNG, DLAT],
-            get_color=[r, g, b, 55],            # FIX: inline literal list — always 4 ints
+            get_color=[r, g, b, 55],            
             get_width=18,
             pickable=False,
         )
@@ -259,7 +295,7 @@ else:
             data=data,
             get_source_position=[OLNG, OLAT],
             get_target_position=[DLNG, DLAT],
-            get_color=[r, g, b, 230],           # FIX: inline literal list
+            get_color=[r, g, b, 230],           
             get_width=4,
             pickable=True,
             auto_highlight=True,
@@ -314,8 +350,8 @@ else:
 
     layers = [
         heatmap,
-        g_clear, g_moderate, g_heavy,   # glow passes first (wider, translucent)
-        l_clear, l_moderate, l_heavy,   # crisp lines on top
+        g_clear, g_moderate, g_heavy,   
+        l_clear, l_moderate, l_heavy,   
         origins, destinations,
     ]
     layers = [lyr for lyr in layers if lyr is not None]
@@ -324,9 +360,8 @@ else:
         layers=layers,
         initial_view_state=pdk.ViewState(
             latitude=19.0760, longitude=72.8777,
-            zoom=11, pitch=0, bearing=0,
+            zoom=11, pitch=45, bearing=0, # pitch=45 for 3D view
         ),
-        # FIX: Use CARTO dark map style — works without a Mapbox token
         map_style="https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json",
         tooltip={
             "html": (
@@ -334,9 +369,9 @@ else:
                 "background:#0a0f1e;border:1px solid rgba(0,255,170,0.25);"
                 "padding:10px 14px;border-radius:8px;color:#e2e8f0;line-height:2'>"
                 "📍 <span style='color:#00dcff'>Origin</span><br>"
-                "{olat}, {olng}<br>"
+                "<b>{start_station}</b><br>"
                 "🎯 <span style='color:#ff2d2d'>Destination</span><br>"
-                "{dlat}, {dlng}<br>"
+                "<b>{end_station}</b><br>"
                 "🚦 Status: {_status}"
                 "</div>"
             ),
@@ -379,8 +414,6 @@ if not df.empty:
 
         fig = go.Figure()
 
-        # FIX: Single trace with a visible line color — no hidden zero-width layer
-        # Area fill below the line (cyan glow fill)
         fig.add_trace(go.Scatter(
             x=traffic_counts["Interval"],
             y=traffic_counts["Events"],
@@ -392,7 +425,6 @@ if not df.empty:
             hovertemplate="<b>Interval %{x}</b><br>Events: %{y}<extra></extra>",
         ))
 
-        # Second trace: glowing dot markers on top of the line (red accent dots)
         fig.add_trace(go.Scatter(
             x=traffic_counts["Interval"],
             y=traffic_counts["Events"],
@@ -436,14 +468,13 @@ if not df.empty:
 
     with col_table:
         st.markdown("### Recent Trips")
-        # FIX: Show display-friendly labels in the table without affecting internal column names
-        show_cols = [c for c in [OLAT, OLNG, DLAT, DLNG, "_status"] if c in df.columns]
+        show_cols = [c for c in ["start_station", "end_station", "mode", "total_fare", "_status"] if c in df.columns]
         rename_map = {
-            OLAT: "Origin Lat",
-            OLNG: "Origin Lng",
-            DLAT: "Dest Lat",
-            DLNG: "Dest Lng",
-            "_status": "Traffic Status",
+            "start_station": "Origin",
+            "end_station": "Destination",
+            "mode": "Mode",
+            "total_fare": "Fare (₹)",
+            "_status": "Status",
         }
         st.dataframe(
             df[show_cols].rename(columns=rename_map).tail(12).reset_index(drop=True),
@@ -451,18 +482,26 @@ if not df.empty:
             height=290,
         )
 
-# --- AUTO-REFRESH CONTROLS & LOGIC ---
-# This block handles both the definition of variables and the rerun logic.
-# Paste this at the very bottom of your dashboard.py file.
-
+# ══════════════════════════════════════════════════════════════════════════════
+# CONTROLS & RESET
+# ══════════════════════════════════════════════════════════════════════════════
 with st.sidebar:
     st.markdown("---")
-    st.markdown("### 🛰️ Live Sync Control")
-    # We use st.toggle and st.slider here to define the variables locally 
-    # so the rest of the script doesn't throw a NameError.
-    live_mode = st.toggle("Satellite Link", value=True, help="Auto-pull data from blockchain")
-    refresh_rate = st.slider("Refresh Rate (s)", 1, 10, 3)
+    
+    # NEW: The Emergency Reset Button
+    if st.button("🚨 EMERGENCY RESET", use_container_width=True):
+        try:
+            requests.post(f"{BASE_URL}/reset_db", timeout=5)
+            st.toast("Database Reset Successful!", icon="✅")
+            time.sleep(1)
+            st.rerun()
+        except Exception as e:
+            st.error(f"Failed to reset: {e}")
 
+    st.markdown("---")
+    live_mode = st.toggle("🛰️ Satellite Link", value=True, help="Auto-refresh dashboard")
+    refresh_rate = st.slider("Frequency (s)", 1, 10, 3)
+    
 if live_mode:
     # This prevents the app from refreshing too fast and crashing the browser
     time.sleep(refresh_rate)
