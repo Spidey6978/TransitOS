@@ -4,8 +4,8 @@ import time
 import uuid
 
 # Target the local endpoint (since this script runs on the same laptop as the API)
-API_URL = "http://localhost:8000/book_ticket"
-STATIONS_URL = "http://localhost:8000/stations"
+API_URL = "https://touchily-steamerless-alyssa.ngrok-free.dev/book_ticket"
+STATIONS_URL = "https://touchily-steamerless-alyssa.ngrok-free.dev/stations"
 
 def run_simulator(delay_seconds=3):
     print("🚦 Booting TransitOS Live Traffic Simulator...")
