@@ -77,20 +77,35 @@ def settle_trip_on_chain(commuter_name: str, from_station: str, to_station: str,
                 
             except Exception as e:
                 error_msg = str(e).lower()
-                # Catch specific EVM nonce collision errors
+                
+                # 1. Nonce Collisions: Heal memory and retry (Your existing logic)
                 if "nonce" in error_msg or "underpriced" in error_msg or "already known" in error_msg:
-                    print(f"⚠️ Nonce sync error detected: {error_msg}")
-                    print("🔄 Healing memory and retrying...")
-                    # Nuke the local memory so it re-fetches from Alchemy on the next loop
+                    print(f"⚠️ Nonce sync error detected. Healing memory and retrying...")
+                    global _current_nonce # Ensure we are targeting the global tracker
                     _current_nonce = None
                     continue
                 
-                # If it's a completely different error (e.g. out of gas), crash immediately
-                _current_nonce = None
-                print(f"🚨 Critical Web3 Error: {e}")
-                return f"ERROR_{str(e)}"
+                # 2. THE ERROR SHIELD: Catch critical errors and abort immediately
+                _current_nonce = None # Reset state just in case
+                print(f"🚨 Critical Web3 Error Intercepted: {e}")
                 
-        return "ERROR_MAX_RETRIES_EXCEEDED"
+                if "insufficient funds" in error_msg:
+                    return "ERR_INSUFFICIENT_FUNDS"
+                elif "execution reverted" in error_msg:
+                    return "ERR_CONTRACT_REVERT"
+                elif "429" in error_msg or "too many requests" in error_msg:
+                    return "ERR_RATE_LIMIT"
+                elif "connection aborted" in error_msg or "remotedisconnected" in error_msg:
+                    return "ERR_RPC_TIMEOUT"
+                else:
+                    return f"ERR_UNKNOWN_{str(e)}"
+                
+        # If the loop finishes without returning, it means we failed the nonce retry 3 times
+        return "ERR_NONCE_COLLISION"
+
+    except Exception as e:
+        print(f"🚨 Fatal Bridge Error: {e}")
+        return f"ERR_FATAL_{str(e)}"
 
     except Exception as e:
         print(f"🚨 Setup Error: {e}")

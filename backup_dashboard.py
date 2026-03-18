@@ -11,20 +11,12 @@ st.set_page_config(
     page_title="TransitOS",
     page_icon="🚦",
     layout="wide",
-    initial_sidebar_state="collapsed",
+    initial_sidebar_state="expanded",
 )
 
 st.markdown("""
 <style>
 @import url('https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Share+Tech+Mono&family=Exo+2:wght@300;400;600&display=swap');
-
-/* 🚨 HIDE ALL STREAMLIT CHROME FOR SEAMLESS IFRAME EMBEDDING 🚨 */
-[data-testid="stSidebar"], 
-[data-testid="collapsedControl"],
-header[data-testid="stHeader"],
-footer {
-    display: none !important;
-}
 
 html, body, [class*="css"] {
     font-family: 'Exo 2', sans-serif;
@@ -41,9 +33,18 @@ html, body, [class*="css"] {
     pointer-events: none;
     z-index: 9999;
 }
-
+[data-testid="stSidebar"] {
+    background: linear-gradient(180deg,#0a0f1e 0%,#060d1a 100%) !important;
+    border-right: 1px solid rgba(0,255,170,0.15) !important;
+}
+[data-testid="stSidebar"] * { color: #94a3b8 !important; }
+[data-testid="stSidebar"] h2, [data-testid="stSidebar"] h3 {
+    color: #00ffaa !important;
+    font-family: 'Rajdhani', sans-serif !important;
+    letter-spacing: 0.1em;
+}
 .main .block-container {
-    padding: 1.5rem 2.5rem !important; /* Adjusted to sit flush without header */
+    padding: 2rem 2.5rem !important;
     max-width: 100% !important;
     background: transparent !important;
 }
@@ -121,21 +122,39 @@ hr { border: none !important; border-top: 1px solid rgba(0,255,170,0.1) !importa
 ::-webkit-scrollbar { width: 6px; height: 6px; }
 ::-webkit-scrollbar-track { background: #0a0f1e; }
 ::-webkit-scrollbar-thumb { background: rgba(0,255,170,0.3); border-radius: 3px; }
+.status-badge { display: inline-flex; align-items: center; gap: 6px; font-family: 'Share Tech Mono', monospace; font-size: 0.7rem; letter-spacing: 0.15em; color: #00ffaa; text-transform: uppercase; }
+.pulse-dot { width: 8px; height: 8px; background: #00ffaa; border-radius: 50%; animation: pulse-ring 1.8s ease-out infinite; display: inline-block; }
+@keyframes pulse-ring {
+    0%   { box-shadow: 0 0 0 0 rgba(0,255,170,0.5); }
+    70%  { box-shadow: 0 0 0 8px rgba(0,255,170,0); }
+    100% { box-shadow: 0 0 0 0 rgba(0,255,170,0); }
+}
+.stat-card { background: linear-gradient(135deg,rgba(0,255,170,0.03),rgba(0,207,255,0.05)); border: 1px solid rgba(0,207,255,0.15); border-radius: 10px; padding: 0.9rem 1.1rem; margin-bottom: 0.6rem; }
+.stat-card-label { font-family: 'Share Tech Mono', monospace; font-size: 0.6rem; letter-spacing: 0.2em; text-transform: uppercase; color: #475569; margin-bottom: 0.15rem; }
+.stat-card-value { font-family: 'Rajdhani', sans-serif; font-size: 1.5rem; font-weight: 700; color: #00cfff; }
+.legend-row {
+    display: flex;
+    gap: 20px;
+    font-family: 'Share Tech Mono', monospace;
+    font-size: 0.7rem;
+    color: #64748b;
+    margin: 10px 0;
+}
+.legend-dot { width: 10px; height: 10px; border-radius: 50%; display: inline-block; margin-right: 5px; }
 
 /* Custom red button styling for the Emergency Reset */
 div.stButton > button {
-    background-color: rgba(255, 45, 45, 0.1) !important;
-    color: #ff2d2d !important;
-    border: 1px solid rgba(255, 45, 45, 0.5) !important;
-    width: 100% !important;
-    font-family: 'Share Tech Mono', monospace !important;
-    letter-spacing: 0.1em !important;
-    padding: 0.8rem !important;
+    background-color: rgba(255, 45, 45, 0.1);
+    color: #ff2d2d;
+    border: 1px solid rgba(255, 45, 45, 0.5);
+    width: 100%;
+    font-family: 'Share Tech Mono', monospace;
+    letter-spacing: 0.1em;
 }
 div.stButton > button:hover {
-    background-color: rgba(255, 45, 45, 0.2) !important;
-    border: 1px solid #ff2d2d !important;
-    color: #fff !important;
+    background-color: rgba(255, 45, 45, 0.2);
+    border: 1px solid #ff2d2d;
+    color: #fff;
 }
 </style>
 """, unsafe_allow_html=True)
@@ -144,17 +163,26 @@ div.stButton > button:hover {
 
 BASE_URL = "https://touchily-steamerless-alyssa.ngrok-free.dev"
 
+# CRITICAL FIX: This header tells Ngrok to skip the HTML warning page
+NGROK_HEADERS = {
+    "ngrok-skip-browser-warning": "69420"
+}
+
 @st.cache_data(ttl=2)
 def load_data():
     try:
-        res = requests.get(f"{BASE_URL}/ledger_live", timeout=2)
+        # We pass the headers here, and increased timeout to 5s to be safe
+        res = requests.get(f"{BASE_URL}/ledger_live", headers=NGROK_HEADERS, timeout=5)
+        
         if res.status_code != 200:
+            st.error(f"Backend Error {res.status_code}: Could not fetch data.")
             return pd.DataFrame()
             
         df = pd.DataFrame(res.json())
         if df.empty:
             return df
 
+        # Rename Dev 2's API columns to match Dev 4's PyDeck map logic
         df = df.rename(columns={
             "start_lat": "olat",
             "start_lng": "olng",
@@ -162,52 +190,72 @@ def load_data():
             "end_lng":   "dlng",
         })
         return df
-    except Exception:
+    except Exception as e:
+        # If the tunnel fails, it will now display the exact error on the dashboard!
+        st.error(f"Connection to Alyssa failed: {e}")
         return pd.DataFrame()
 
 @st.cache_data(ttl=2)
 def fetch_stats():
+    """Fetches overarching system stats from the backend."""
     try:
-        res = requests.get(f"{BASE_URL}/stats", timeout=2)
+        res = requests.get(f"{BASE_URL}/stats", headers=NGROK_HEADERS, timeout=5)
         if res.status_code == 200:
             return res.json()
-    except Exception:
+    except Exception as e:
+        st.error(f"Stats sync failed: {e}")
         pass
+    # Fallback if the server is unreachable
     return {"total_tickets": 0, "total_revenue_inr": 0, "unique_commuters": 0}
 
 df = load_data()
 global_stats = fetch_stats()
 
+# Short alias constants matching renamed columns
 OLAT = "olat"
 OLNG = "olng"
 DLAT = "dlat"
 DLNG = "dlng"
 
+# ── stats ──────────────────────────────────────────────────────────────────────
 total_events   = len(df)
 active_origins = df[[OLAT, OLNG]].drop_duplicates().shape[0] if not df.empty else 0
 unique_dest    = df[[DLAT, DLNG]].drop_duplicates().shape[0] if not df.empty else 0
 congestion_pct = min(int((1 - active_origins / max(total_events, 1)) * 100), 99) if total_events > 0 else 0
 
 # ══════════════════════════════════════════════════════════════════════════════
-# HEADER + KPIs + CONTROLS (Moved to main view)
+# SIDEBAR
 # ══════════════════════════════════════════════════════════════════════════════
-# Using a 5:2 ratio gives the toggles plenty of room next to the title
-title_col, ctrl_col = st.columns([5, 2])
+with st.sidebar:
+    st.markdown("## ⚡ TransitOS")
+    st.markdown('<div class="status-badge"><span class="pulse-dot"></span>Live Monitoring</div>', unsafe_allow_html=True)
+    st.markdown("---")
+    
+    st.metric("Total Events",   f"{global_stats['total_tickets']:,}")
+    st.metric("Active Origins", f"{active_origins:,}")
+    st.metric("Destinations",   f"{unique_dest:,}")
+    st.markdown("---")
+    st.markdown(f"""
+        <div class="stat-card">
+            <div class="stat-card-label">Network Load</div>
+            <div class="stat-card-value">{congestion_pct}%</div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-card-label">City</div>
+            <div class="stat-card-value" style="font-size:1.1rem;color:#e2e8f0">Mumbai, IN</div>
+        </div>
+    """, unsafe_allow_html=True)
+    st.markdown("---")
+    st.markdown('<p style="font-family:\'Share Tech Mono\',monospace;font-size:0.65rem;letter-spacing:0.15em;color:#334155;text-transform:uppercase;">TransitOS v2.4 · Real-time</p>', unsafe_allow_html=True)
 
-with title_col:
-    st.markdown(
-        '<div class="dashboard-title">🚦 TransitOS Smart Traffic</div>'
-        '<div class="dashboard-subtitle">Real-Time Urban Mobility Intelligence · Mumbai Metropolitan Region</div>',
-        unsafe_allow_html=True,
-    )
-
-with ctrl_col:
-    st.markdown("<div style='margin-top: 10px;'></div>", unsafe_allow_html=True)
-    sc1, sc2 = st.columns([1, 1])
-    with sc1:
-        live_mode = st.toggle("🛰️ Satellite Link", value=True)
-    with sc2:
-        refresh_rate = st.slider("Freq (s)", 1, 10, 3, label_visibility="collapsed")
+# ══════════════════════════════════════════════════════════════════════════════
+# HEADER + KPIs
+# ══════════════════════════════════════════════════════════════════════════════
+st.markdown(
+    '<div class="dashboard-title">🚦 TransitOS Smart Traffic</div>'
+    '<div class="dashboard-subtitle">Real-Time Urban Mobility Intelligence · Mumbai Metropolitan Region</div>',
+    unsafe_allow_html=True,
+)
 
 c1, c2, c3, c4 = st.columns(4)
 c1.metric("Confirmed Trips",     f"{global_stats['total_tickets']:,}",   delta="Live")
@@ -225,6 +273,7 @@ if df.empty:
 else:
     st.markdown("### Live Traffic Map")
 
+    # ── classify each route by frequency (frequency = congestion proxy) ────────
     route_keys = [OLAT, OLNG, DLAT, DLNG]
     df["_count"] = df.groupby(route_keys)[OLAT].transform("count")
     low_t  = df["_count"].quantile(0.40)
@@ -263,9 +312,10 @@ else:
         )
         return glow, line
 
-    g_clear,    l_clear    = make_line_layers(df_clear,    0,   220, 255)   
-    g_moderate, l_moderate = make_line_layers(df_moderate, 255, 190, 0)    
-    g_heavy,    l_heavy    = make_line_layers(df_heavy,    255, 45,  45)    
+    # Vivid cyan / amber / red palette
+    g_clear,    l_clear    = make_line_layers(df_clear,    0,   220, 255)   # cyan
+    g_moderate, l_moderate = make_line_layers(df_moderate, 255, 190, 0)    # amber
+    g_heavy,    l_heavy    = make_line_layers(df_heavy,    255, 45,  45)    # red
 
     heatmap = pdk.Layer(
         "HeatmapLayer",
@@ -288,7 +338,7 @@ else:
         data=df,
         get_position=[OLNG, OLAT],
         get_radius=180,
-        get_fill_color=[0, 220, 255, 240],      
+        get_fill_color=[0, 220, 255, 240],      # cyan dots for origins
         stroked=True,
         get_line_color=[255, 255, 255, 160],
         line_width_min_pixels=1,
@@ -300,7 +350,7 @@ else:
         data=df,
         get_position=[DLNG, DLAT],
         get_radius=180,
-        get_fill_color=[255, 45, 45, 240],      
+        get_fill_color=[255, 45, 45, 240],      # red dots for destinations
         stroked=True,
         get_line_color=[255, 255, 255, 160],
         line_width_min_pixels=1,
@@ -319,7 +369,7 @@ else:
         layers=layers,
         initial_view_state=pdk.ViewState(
             latitude=19.0760, longitude=72.8777,
-            zoom=11, pitch=45, bearing=0, 
+            zoom=11, pitch=45, bearing=0, # pitch=45 for 3D view
         ),
         map_style="https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json",
         tooltip={
@@ -442,24 +492,24 @@ if not df.empty:
         )
 
 # ══════════════════════════════════════════════════════════════════════════════
-# EMERGENCY RESET & AUTO-REFRESH (Moved to bottom)
+# CONTROLS & RESET
 # ══════════════════════════════════════════════════════════════════════════════
-st.markdown("---")
-st.markdown("<div style='margin-bottom: 20px;'></div>", unsafe_allow_html=True)
-
-# Using columns to center the Emergency Reset button nicely at the bottom
-_, reset_col, _ = st.columns([1, 2, 1])
-with reset_col:
+with st.sidebar:
+    st.markdown("---")
+    
     if st.button("🚨 EMERGENCY RESET", use_container_width=True):
         try:
-            requests.post(f"{BASE_URL}/reset_db", timeout=5)
+            requests.post(f"{BASE_URL}/reset_db", headers=NGROK_HEADERS, timeout=5)
             st.toast("Database Reset Successful!", icon="✅")
             time.sleep(1)
             st.rerun()
         except Exception as e:
             st.error(f"Failed to reset: {e}")
 
-# The actual looping logic
+    st.markdown("---")
+    live_mode = st.toggle("🛰️ Satellite Link", value=True, help="Auto-refresh dashboard")
+    refresh_rate = st.slider("Frequency (s)", 1, 10, 3)
+    
 if live_mode:
     time.sleep(refresh_rate)
     st.rerun()
