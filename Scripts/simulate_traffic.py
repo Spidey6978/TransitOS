@@ -62,4 +62,4 @@ def run_simulator(delay_seconds=3):
 
 if __name__ == "__main__":
     # Adjust this delay to control how fast the map updates
-    run_simulator(delay_seconds=3)
+    run_simulator(delay_seconds=10)

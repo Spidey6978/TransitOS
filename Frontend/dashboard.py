@@ -163,11 +163,19 @@ div.stButton > button:hover {
 
 BASE_URL = "https://touchily-steamerless-alyssa.ngrok-free.dev"
 
+# CRITICAL FIX: This header tells Ngrok to skip the HTML warning page
+NGROK_HEADERS = {
+    "ngrok-skip-browser-warning": "69420"
+}
+
 @st.cache_data(ttl=2)
 def load_data():
     try:
-        res = requests.get(f"{BASE_URL}/ledger_live", timeout=2)
+        # We pass the headers here, and increased timeout to 5s to be safe
+        res = requests.get(f"{BASE_URL}/ledger_live", headers=NGROK_HEADERS, timeout=5)
+        
         if res.status_code != 200:
+            st.error(f"Backend Error {res.status_code}: Could not fetch data.")
             return pd.DataFrame()
             
         df = pd.DataFrame(res.json())
@@ -182,17 +190,20 @@ def load_data():
             "end_lng":   "dlng",
         })
         return df
-    except Exception:
+    except Exception as e:
+        # If the tunnel fails, it will now display the exact error on the dashboard!
+        st.error(f"Connection to Alyssa failed: {e}")
         return pd.DataFrame()
 
 @st.cache_data(ttl=2)
 def fetch_stats():
-    """NEW: Fetches overarching system stats from the backend."""
+    """Fetches overarching system stats from the backend."""
     try:
-        res = requests.get(f"{BASE_URL}/stats", timeout=2)
+        res = requests.get(f"{BASE_URL}/stats", headers=NGROK_HEADERS, timeout=5)
         if res.status_code == 200:
             return res.json()
-    except Exception:
+    except Exception as e:
+        st.error(f"Stats sync failed: {e}")
         pass
     # Fallback if the server is unreachable
     return {"total_tickets": 0, "total_revenue_inr": 0, "unique_commuters": 0}
@@ -220,7 +231,6 @@ with st.sidebar:
     st.markdown('<div class="status-badge"><span class="pulse-dot"></span>Live Monitoring</div>', unsafe_allow_html=True)
     st.markdown("---")
     
-    # NEW: Updated to use global stats for total ticket count
     st.metric("Total Events",   f"{global_stats['total_tickets']:,}")
     st.metric("Active Origins", f"{active_origins:,}")
     st.metric("Destinations",   f"{unique_dest:,}")
@@ -248,7 +258,6 @@ st.markdown(
 )
 
 c1, c2, c3, c4 = st.columns(4)
-# NEW: KPIs updated to show actual revenue and unique nodes
 c1.metric("Confirmed Trips",     f"{global_stats['total_tickets']:,}",   delta="Live")
 c2.metric("Revenue (INR)",       f"₹{global_stats['total_revenue_inr']:,}", delta="Verified")
 c3.metric("Unique Nodes",        f"{global_stats['unique_commuters']:,}")
@@ -488,10 +497,9 @@ if not df.empty:
 with st.sidebar:
     st.markdown("---")
     
-    # NEW: The Emergency Reset Button
     if st.button("🚨 EMERGENCY RESET", use_container_width=True):
         try:
-            requests.post(f"{BASE_URL}/reset_db", timeout=5)
+            requests.post(f"{BASE_URL}/reset_db", headers=NGROK_HEADERS, timeout=5)
             st.toast("Database Reset Successful!", icon="✅")
             time.sleep(1)
             st.rerun()
@@ -503,7 +511,5 @@ with st.sidebar:
     refresh_rate = st.slider("Frequency (s)", 1, 10, 3)
     
 if live_mode:
-    # This prevents the app from refreshing too fast and crashing the browser
     time.sleep(refresh_rate)
     st.rerun()
-    
