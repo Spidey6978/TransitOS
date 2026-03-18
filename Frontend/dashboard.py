@@ -506,4 +506,4 @@ if live_mode:
     # This prevents the app from refreshing too fast and crashing the browser
     time.sleep(refresh_rate)
     st.rerun()
-    
+     
