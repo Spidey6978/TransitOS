@@ -2,7 +2,7 @@
 
 TransitOS is a decentralized transit settlement engine designed for high-volume urban environments like Mumbai. It restructures fragmented transit logic into a trustless, 60/40 revenue-splitting (will be modified to proper fare-per-mode splitting later) kernel on the Polygon blockchain.
 
-⚠️ BRANCH PROTECTION ACTIVE: Direct pushes to master are blocked. All code must be pushed to your respective branch (e.g., dev3-frontend) and submitted via a Pull Request (PR) for review.
+This is the backend for TransitOS, working alongside the TransitOS-Frontend.
 
 🏗 System Architecture
 
