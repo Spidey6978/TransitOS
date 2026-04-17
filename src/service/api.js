@@ -1,7 +1,7 @@
 import axios from "axios";
 
 const api = axios.create({
-  baseURL: "https://crank-chatting-broadcast.ngrok-free.dev",
+  baseURL: "https://touchily-steamerless-alyssa.ngrok-free.dev",
   headers: {
     "Content-Type": "application/json",
     "ngrok-skip-browser-warning": "69420",
@@ -41,5 +41,13 @@ export const bookTicket = async (ticketData) => {
     throw error
   }
 }
-
+export const validateTicketById = async (ticket_id) => {
+  try {
+    const response = await api.post('/validate_ticket', { ticket_id });
+    return response.data;
+  } catch (error) {
+    console.error('Manual validation fetch error:', error);
+    throw error;
+  }
+};
 export default api;

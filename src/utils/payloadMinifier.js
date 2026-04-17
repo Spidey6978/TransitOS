@@ -285,3 +285,80 @@ export function validateAndDecodeQR(qrData) {
     return null
   }
 }
+
+// ADD THESE TO THE BOTTOM OF src/utils/payloadMinifier.js
+
+/**
+ * Minify a multi-leg trip payload for QR encoding
+ * Each leg: { mode, from, to }
+ * Private legs (auto/taxi/bike) will have status: "pending" initially
+ *
+ * Output format per leg: "M:AND:WEH" or "A:Home:Andheri"
+ * Full string: "MULTILEG|ticketId|leg1|leg2|..."
+ */
+export function minifyMultiLegPayload(ticketData) {
+  if (!ticketData || !ticketData.legs || ticketData.legs.length === 0) return null
+
+  try {
+    const modeCode = (mode = '') => {
+      const m = mode.toLowerCase()
+      if (m.includes('metro')) return 'MT'
+      if (m.includes('train')) return 'TR'
+      if (m.includes('bus')) return 'BU'
+      if (m.includes('auto')) return 'AU'
+      if (m.includes('taxi')) return 'TX'
+      if (m.includes('bike')) return 'BK'
+      return 'XX'
+    }
+
+    const legStrings = ticketData.legs.map(leg =>
+      `${modeCode(leg.mode)}:${leg.from}:${leg.to}:${leg.status || 'confirmed'}`
+    )
+
+    const payload = {
+      v: 3,                                    // version
+      t: ticketData.ticket_id,
+      c: ticketData.commuter_name,
+      ia: ticketData.issued_at,
+      vu: ticketData.valid_until,
+      a: ticketData.passengers?.adults || 1,
+      s: ticketData.passengers?.childrenWithSeats || 0,
+      n: ticketData.passengers?.children || 0,
+      fa: ticketData.total_fare,
+      legs: legStrings
+    }
+
+    return payload
+  } catch (err) {
+    console.error('Error minifying multi-leg payload:', err)
+    return null
+  }
+}
+
+/**
+ * Calculate total fare across all legs
+ * Private legs: use osrm-based estimate passed in
+ * Public legs: use fare from route selection
+ */
+export function calculateMultiLegFare(legs, passengerData) {
+  const adultCount = passengerData?.adults || 1
+  const childSeatCount = passengerData?.childrenWithSeats || 0
+
+  let total = 0
+  for (const leg of legs) {
+    const base = leg.estimatedFare || 0
+    total += base * adultCount + base * 0.5 * childSeatCount
+  }
+  return Math.round(total * 100) / 100
+}
+
+/**
+ * Check if any leg in a multi-leg trip is a private/gig mode
+ */
+export function hasPrivateLeg(legs) {
+  if (!legs || legs.length === 0) return false
+  return legs.some(leg => {
+    const m = (leg.mode || '').toLowerCase()
+    return m.includes('auto') || m.includes('taxi') || m.includes('bike')
+  })
+}

@@ -1,25 +1,30 @@
 import { QRCode } from 'react-qr-code'
 import { CheckCircle2, MapPin, Clock, IndianRupee, Users } from 'lucide-react'
 import { cn } from '@/lib/utils'
-import { minifyGroupPayload } from '../utils/payloadMinifier'
+import { minifyGroupPayload, minifyMultiLegPayload } from '../utils/payloadMinifier'
 
 export default function QRGeneratorGrouped({ ticket, passengerData, onBookAnother }) {
   if (!ticket) return null
 
   // Build minified QR payload that includes group metadata
-  const qrPayload = minifyGroupPayload({
-    ticket_id: ticket.ticket_id,
-    commuter_name: ticket.commuter_name,
-    from_station: ticket.from_station,
-    to_station: ticket.to_station,
-    mode: ticket.mode,
-    issued_at: ticket.issued_at,
-    valid_until: ticket.valid_until,
-    passengers: passengerData,
-    operators: ticket.operators,
-    amounts_wei: ticket.amounts_wei,
-    polyline: ticket.polyline
-  })
+  // If ticket has multi-leg data use the V3 minifier, else fall back to V2
+  const qrPayload = ticket.qr_payload
+  ? ticket.qr_payload
+  : ticket.legs && ticket.legs.length > 1
+    ? minifyMultiLegPayload(ticket)
+    : minifyGroupPayload({
+        ticket_id: ticket.ticket_id,
+        commuter_name: ticket.commuter_name,
+        from_station: ticket.from_station,
+        to_station: ticket.to_station,
+        mode: ticket.mode,
+        issued_at: ticket.issued_at,
+        valid_until: ticket.valid_until,
+        passengers: passengerData,
+        operators: ticket.operators,
+        amounts_wei: ticket.amounts_wei,
+        polyline: ticket.polyline
+      })
 
   const qrValue = JSON.stringify(qrPayload)
   
