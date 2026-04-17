@@ -1,0 +1,10 @@
+fastapi
+uvicorn
+requests
+python-dotenv
+web3
+slowapi
+streamlit
+pandas
+pydeck
+plotly
