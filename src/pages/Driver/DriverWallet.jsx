@@ -5,15 +5,11 @@
  * withdraw their available balance to their bank account.
  *
  * Dependent files (all already exist):
- *   src/service/driverApi.js
- *   src/components/ui/card.jsx
- *   src/components/ui/button.jsx
- *   @/lib/utils  (cn helper)
- *   lucide-react
- *
- * NOTE: `GET /driver_wallet` is called to fetch balance + pending escrow.
- * If your backend exposes a different endpoint name, change the import below.
- * We define a small inline helper so driverApi.js stays minimal.
+ * src/service/driver_api.jsx (Updated import)
+ * src/components/ui/card.jsx
+ * src/components/ui/button.jsx
+ * @/lib/utils  (cn helper)
+ * lucide-react
  */
 
 import { useState, useEffect, useCallback } from 'react'
@@ -25,7 +21,9 @@ import {
 import { cn } from '@/lib/utils'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
-import driverApi, { withdrawFiat } from '../../service/driverApi'
+
+// FIXED: Updated import path to match your actual file name: driver_api.jsx
+import driverApi, { withdrawFiat } from '../../service/driver_api'
 
 // ─── Inline wallet fetch (avoids coupling driverApi.js to one route name) ─────
 async function getDriverWallet() {
@@ -44,14 +42,11 @@ function fmt(n) {
 function WalletSkeleton() {
   return (
     <div className="space-y-4 animate-pulse">
-      {/* Balance card skeleton */}
       <div className="rounded-2xl h-44 bg-slate-900/60 border border-white/5" />
-      {/* Stats row skeleton */}
       <div className="grid grid-cols-2 gap-3">
         <div className="h-24 rounded-xl bg-slate-900/40 border border-white/5" />
         <div className="h-24 rounded-xl bg-slate-900/40 border border-white/5" />
       </div>
-      {/* Withdraw card skeleton */}
       <div className="h-48 rounded-2xl bg-slate-900/40 border border-white/5" />
     </div>
   )
@@ -75,8 +70,8 @@ function Toast({ message, type, onDismiss }) {
         : 'bg-rose-950/90  border-rose-500/30  text-rose-300'
     )}>
       {type === 'success'
-        ? <BadgeCheck    className="w-4 h-4 text-green-400 shrink-0" />
-        : <AlertCircle   className="w-4 h-4 text-rose-400  shrink-0" />
+        ? <BadgeCheck className="w-4 h-4 text-green-400 shrink-0" />
+        : <AlertCircle className="w-4 h-4 text-rose-400 shrink-0" />
       }
       {message}
     </div>
@@ -86,13 +81,13 @@ function Toast({ message, type, onDismiss }) {
 // ─── Withdraw Panel ───────────────────────────────────────────────────────────
 
 function WithdrawPanel({ available, onSuccess, onError }) {
-  const [withdrawing,   setWithdrawing]   = useState(false)
-  const [customAmount,  setCustomAmount]  = useState('')
-  const [useCustom,     setUseCustom]     = useState(false)
-  const [successAmount, setSuccessAmount] = useState(null)  // shows success state inline
+  const [withdrawing, setWithdrawing] = useState(false)
+  const [customAmount, setCustomAmount] = useState('')
+  const [useCustom, setUseCustom] = useState(false)
+  const [successAmount, setSuccessAmount] = useState(null)
 
-  const parsed  = parseFloat(customAmount)
-  const amount  = useCustom ? (isNaN(parsed) ? 0 : parsed) : available
+  const parsed = parseFloat(customAmount)
+  const amount = useCustom ? (isNaN(parsed) ? 0 : parsed) : available
   const isValid = amount > 0 && amount <= available
 
   async function handleWithdraw() {
@@ -124,8 +119,6 @@ function WithdrawPanel({ available, onSuccess, onError }) {
         </p>
       </CardHeader>
       <CardContent className="space-y-4">
-
-        {/* Full amount vs custom */}
         <div className="flex gap-2">
           <button
             onClick={() => setUseCustom(false)}
@@ -151,7 +144,6 @@ function WithdrawPanel({ available, onSuccess, onError }) {
           </button>
         </div>
 
-        {/* Custom input */}
         {useCustom && (
           <div
             className="flex items-center gap-2 rounded-xl border px-4 py-3 transition-colors"
@@ -175,7 +167,6 @@ function WithdrawPanel({ available, onSuccess, onError }) {
           </div>
         )}
 
-        {/* Amount preview */}
         {isValid && (
           <div
             className="flex justify-between items-center rounded-xl px-4 py-3 border border-cyan-500/20"
@@ -186,7 +177,6 @@ function WithdrawPanel({ available, onSuccess, onError }) {
           </div>
         )}
 
-        {/* Success inline */}
         {successAmount != null && (
           <div className="flex items-center gap-2 rounded-xl px-4 py-3 border border-green-500/25 bg-green-500/8 text-green-400 text-sm font-medium">
             <CheckCircle2 className="w-4 h-4 shrink-0" />
@@ -194,7 +184,6 @@ function WithdrawPanel({ available, onSuccess, onError }) {
           </div>
         )}
 
-        {/* Insufficient */}
         {useCustom && !isNaN(parsed) && parsed > 0 && parsed > available && (
           <p className="text-xs text-rose-400 flex items-center gap-1.5">
             <AlertCircle className="w-3.5 h-3.5" />
@@ -219,7 +208,6 @@ function WithdrawPanel({ available, onSuccess, onError }) {
           }
         </Button>
 
-        {/* Trust badge */}
         <div className="flex items-center justify-center gap-1.5 text-[10px] text-slate-700 tracking-wide">
           <ShieldCheck className="w-3 h-3" />
           Secured via TransitOS settlement contract
@@ -232,11 +220,11 @@ function WithdrawPanel({ available, onSuccess, onError }) {
 // ─── Main Component ───────────────────────────────────────────────────────────
 
 export default function DriverWallet() {
-  const [wallet,     setWallet]     = useState(null)
-  const [loading,    setLoading]    = useState(true)
+  const [wallet, setWallet] = useState(null)
+  const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false)
-  const [error,      setError]      = useState('')
-  const [toast,      setToast]      = useState(null)
+  const [error, setError] = useState('')
+  const [toast, setToast] = useState(null)
 
   const showToast = (message, type = 'success') => setToast({ message, type })
 
@@ -257,7 +245,6 @@ export default function DriverWallet() {
 
   useEffect(() => { fetchWallet() }, [fetchWallet])
 
-  // After a successful withdrawal, refresh wallet data
   function handleWithdrawSuccess(msg) {
     showToast(msg, 'success')
     setTimeout(() => fetchWallet(true), 1200)
@@ -268,13 +255,8 @@ export default function DriverWallet() {
   const lifetime  = wallet?.lifetime_earnings ?? null
 
   return (
-    <div
-      className="min-h-screen p-6 pb-20"
-      style={{ background: '#0b1220' }}
-    >
+    <div className="min-h-screen p-6 pb-20 bg-slate-950">
       <div className="max-w-xl mx-auto">
-
-        {/* ── Page header ── */}
         <div className="mb-6 flex items-center justify-between">
           <div>
             <div className="flex items-center gap-2 mb-1">
@@ -287,108 +269,69 @@ export default function DriverWallet() {
             onClick={() => fetchWallet(true)}
             disabled={refreshing}
             className="text-slate-600 hover:text-slate-400 transition-colors"
-            title="Refresh"
           >
             <RefreshCw className={cn('w-4 h-4', refreshing && 'animate-spin')} />
           </button>
         </div>
 
-        {/* ── Skeleton ── */}
         {loading && <WalletSkeleton />}
 
-        {/* ── Error ── */}
         {!loading && error && (
           <div className="rounded-xl border border-rose-500/30 bg-rose-500/5 px-4 py-4 flex items-start gap-3 mb-4">
             <AlertCircle className="w-4 h-4 text-rose-400 shrink-0 mt-0.5" />
             <div>
               <p className="text-rose-400 text-sm font-medium">{error}</p>
-              <button
-                onClick={() => fetchWallet(true)}
-                className="text-rose-400/70 text-xs mt-1 hover:text-rose-300 underline"
-              >
-                Retry
-              </button>
+              <button onClick={() => fetchWallet(true)} className="text-rose-400/70 text-xs mt-1 underline">Retry</button>
             </div>
           </div>
         )}
 
-        {/* ── Wallet content ── */}
         {!loading && !error && (
           <div className="space-y-4">
-
-            {/* ── Balance card ── */}
             <div
               className="rounded-2xl p-6 relative overflow-hidden border border-cyan-500/15"
               style={{
                 background: 'linear-gradient(135deg, rgba(14,165,233,0.12) 0%, rgba(7,14,26,0.95) 100%)',
-                boxShadow: '0 0 40px rgba(34,211,238,0.06)',
               }}
             >
-              {/* Decorative circles */}
-              <div className="absolute -top-8 -right-8 w-40 h-40 rounded-full bg-cyan-500/5" />
-              <div className="absolute -bottom-10 -right-2 w-28 h-28 rounded-full bg-cyan-500/5" />
-
-              <p className="text-[10px] tracking-widest uppercase text-slate-500 mb-1 relative z-10">
-                Available Balance
-              </p>
+              <p className="text-[10px] tracking-widest uppercase text-slate-500 mb-1 relative z-10">Available Balance</p>
               <div className="flex items-end gap-2 relative z-10 mb-4">
-                <span className="text-4xl font-bold text-white tracking-tight">
-                  ₹{fmt(available)}
-                </span>
-                {available > 0 && (
-                  <span className="text-xs text-cyan-400 mb-1 font-semibold">Ready to withdraw</span>
-                )}
+                <span className="text-4xl font-bold text-white tracking-tight">₹{fmt(available)}</span>
               </div>
-
-              {/* Mini stats row */}
               <div className="flex gap-4 relative z-10">
                 <div>
-                  <p className="text-[9px] text-slate-600 tracking-widest uppercase mb-0.5">
-                    <Clock className="w-2.5 h-2.5 inline mr-0.5" />Pending Escrow
-                  </p>
+                  <p className="text-[9px] text-slate-600 tracking-widest uppercase mb-0.5"><Clock className="w-2.5 h-2.5 inline mr-0.5" />Pending</p>
                   <p className="text-sm font-bold text-amber-400">₹{fmt(pending)}</p>
                 </div>
                 {lifetime != null && (
                   <div>
-                    <p className="text-[9px] text-slate-600 tracking-widest uppercase mb-0.5">
-                      <TrendingUp className="w-2.5 h-2.5 inline mr-0.5" />Lifetime
-                    </p>
+                    <p className="text-[9px] text-slate-600 tracking-widest uppercase mb-0.5"><TrendingUp className="w-2.5 h-2.5 inline mr-0.5" />Lifetime</p>
                     <p className="text-sm font-bold text-slate-300">₹{fmt(lifetime)}</p>
                   </div>
                 )}
               </div>
             </div>
 
-            {/* ── Stat tiles ── */}
             <div className="grid grid-cols-2 gap-3">
               <div className="rounded-xl border border-amber-500/20 bg-amber-500/5 p-4">
-                <p className="text-[9px] text-slate-600 tracking-widest uppercase mb-1">
-                  <Clock className="w-3 h-3 inline mr-0.5" />Pending Escrow
-                </p>
+                <p className="text-[9px] text-slate-600 tracking-widest uppercase mb-1">Escrow</p>
                 <p className="text-xl font-bold text-amber-400">₹{fmt(pending)}</p>
-                <p className="text-[9px] text-slate-700 mt-1">Released after trip completion</p>
               </div>
               <div className="rounded-xl border border-white/[0.06] bg-white/[0.02] p-4">
-                <p className="text-[9px] text-slate-600 tracking-widests uppercase mb-1">
-                  <IndianRupee className="w-3 h-3 inline mr-0.5" />Available Now
-                </p>
+                <p className="text-[9px] text-slate-600 tracking-widest uppercase mb-1">Available</p>
                 <p className="text-xl font-bold text-cyan-400">₹{fmt(available)}</p>
-                <p className="text-[9px] text-slate-700 mt-1">Withdrawable balance</p>
               </div>
             </div>
 
-            {/* ── Withdraw panel ── */}
             <WithdrawPanel
               available={available}
               onSuccess={handleWithdrawSuccess}
               onError={(msg) => showToast(msg, 'error')}
             />
-
           </div>
         )}
       </div>
 
-      {/* ── Toast ── */}
       {toast && (
         <Toast
           message={toast.message}
