@@ -41,6 +41,7 @@ app.add_middleware(
     allow_origins=["*"],
     allow_methods=["*"],
     allow_headers=["*"],
+    allow_credentials=True,
 )
 
 def init_db():
@@ -620,52 +621,57 @@ class CancelRequest(BaseModel):
     leg_id: str
     reason: str = "User requested cancellation"
 
-@app.post("/driver_cancel")
-def driver_cancel(payload: CancelRequest):
-    """
-    Triggered when a Gig Worker cancels the ride.
-    Commuter gets 100% of their money back. TransitOS eats the gas cost.
-    """
-    leg_ticket_id = f"{payload.ticket_id}_private_{payload.leg_id}"
+# @app.post("/driver_cancel")
+# def driver_cancel(payload: CancelRequest):
+#     """
+#     Triggered when a Gig Worker cancels the ride.
+#     Commuter gets 100% of their money back. TransitOS eats the gas cost.
+#     """
+#     leg_ticket_id = f"{payload.ticket_id}_private_{payload.leg_id}"
     
-    with sqlite3.connect(DB_FILE) as conn:
-        c = conn.cursor()
-        # 🔥 FIX: Querying route_path (the JSON column) instead of operator_split
-        c.execute("SELECT total_fare, mode, route_path FROM ledger WHERE ticket_id = ?", (leg_ticket_id,))
-        row = c.fetchone()
+#     with sqlite3.connect(DB_FILE) as conn:
+#         c = conn.cursor()
+#         # 🔥 FIX: Querying route_path (the JSON column) instead of operator_split
+#         c.execute("SELECT total_fare, mode, route_path FROM ledger WHERE ticket_id = ?", (leg_ticket_id,))
+#         row = c.fetchone()
         
-        if not row:
-            raise HTTPException(status_code=404, detail="Private Leg not found")
-        if "CANCELLED" in row[1]:
-            raise HTTPException(status_code=400, detail="Leg already cancelled")
+#         if not row:
+#             raise HTTPException(status_code=404, detail="Private Leg not found")
+#         if "CANCELLED" in row[1]:
+#             raise HTTPException(status_code=400, detail="Leg already cancelled")
             
-        gross_fare = row[0]
-        # Safely parse the JSON route data
-        route_data = json.loads(row[2]) if row[2] else {}
-        operators = route_data.get("escrow", {}).get("operators", [])
+#         gross_fare = row[0]
+#         # Safely parse the JSON route data
+#         route_data = json.loads(row[2]) if row[2] else {}
+#         operators = route_data.get("escrow", {}).get("operators", [])
         
-        # Verify it hasn't been handshaked by another driver yet
-        if "0x0000000000000000000000000000000000000000" not in operators:
-            raise HTTPException(status_code=400, detail="Cannot cancel: A driver has already claimed this escrow.")
+#         # Verify it hasn't been handshaked by another driver yet
+#         if "0x0000000000000000000000000000000000000000" not in operators:
+#             raise HTTPException(status_code=400, detail="Cannot cancel: A driver has already claimed this escrow.")
             
-        # The driver's specific 95% cut is what sits in the 0x000 wallet
-        refund_amount_wei = int(gross_fare * 0.95 * 10**18) 
+#         # The driver's specific 95% cut is what sits in the 0x000 wallet
+#         refund_amount_wei = int(gross_fare * 0.95 * 10**18) 
         
-        # 1. Trigger the Smart Contract Sweep
-        # tx_hash = sweep_escrow_on_chain(refund_amount_wei)
-        # if tx_hash.startswith("ERR_"):
-        #     raise HTTPException(status_code=500, detail="Blockchain sweep failed")
+#         # 1. Trigger the Smart Contract Sweep
+#         # tx_hash = sweep_escrow_on_chain(refund_amount_wei)
+#         # if tx_hash.startswith("ERR_"):
+#         #     raise HTTPException(status_code=500, detail="Blockchain sweep failed")
         
-        # 2. Mark as Cancelled in the database so it can't be scanned
-        new_mode = f"{row[1]} (CANCELLED)"
-        c.execute("UPDATE ledger SET mode = ? WHERE ticket_id = ?", (new_mode, leg_ticket_id))
-        conn.commit()
+#         # 2. Mark as Cancelled in the database so it can't be scanned
+#         new_mode = f"{row[1]} (CANCELLED)"
+#         c.execute("UPDATE ledger SET mode = ? WHERE ticket_id = ?", (new_mode, leg_ticket_id))
+#         conn.commit()
         
-    return {
-        "status": "refund_swept",
-        "refund_amount_inr": gross_fare, # 100% Refund
-        "message": "Funds returned to treasury. UI should credit commuter wallet."
-    }
+#     return {
+#         "status": "refund_swept",
+#         "refund_amount_inr": gross_fare, # 100% Refund
+#         "message": "Funds returned to treasury. UI should credit commuter wallet."
+#     }
+
+class CancelRequest(BaseModel):
+    ticket_id: str
+    leg_id: str = "1"
+    reason: str = "User requested cancellation"
 
 @app.post("/user_cancel")
 def user_cancel(payload: CancelRequest):
@@ -673,44 +679,93 @@ def user_cancel(payload: CancelRequest):
     Triggered when the Commuter cancels the ride before a driver arrives.
     Applies the ₹0.50 Gas-Pegged Micro-Fee to prevent network griefing.
     """
-    leg_ticket_id = f"{payload.ticket_id}_private_{payload.leg_id}"
-    
+    # Handle both formats: with and without _private_ suffix
+    leg_ticket_id = payload.ticket_id
+    if "_private_" not in leg_ticket_id:
+        leg_ticket_id = f"{payload.ticket_id}_private_{payload.leg_id}"
+   
     with sqlite3.connect(DB_FILE) as conn:
         c = conn.cursor()
-        # 🔥 FIX: Querying route_path (the JSON column) instead of operator_split
+        # Try exact match first, then search with LIKE
         c.execute("SELECT total_fare, mode, route_path FROM ledger WHERE ticket_id = ?", (leg_ticket_id,))
         row = c.fetchone()
-        
+       
         if not row:
-            raise HTTPException(status_code=404, detail="Private Leg not found")
+            # Try searching without the _private_ suffix
+            c.execute("SELECT total_fare, mode, route_path FROM ledger WHERE ticket_id LIKE ?", (f"%{payload.ticket_id}%",))
+            row = c.fetchone()
+       
+        if not row:
+            raise HTTPException(status_code=404, detail=f"Ticket not found: {leg_ticket_id}")
+       
         if "CANCELLED" in row[1]:
             raise HTTPException(status_code=400, detail="Leg already cancelled")
-            
+       
         gross_fare = row[0]
         route_data = json.loads(row[2]) if row[2] else {}
         operators = route_data.get("escrow", {}).get("operators", [])
-        
-        if "0x0000000000000000000000000000000000000000" not in operators:
+       
+        # For regular tickets (not gig transit), allow cancellation
+        # For gig transit tickets with driver assigned, block cancellation
+        if operators and "0x0000000000000000000000000000000000000000" not in operators:
             raise HTTPException(status_code=400, detail="Cannot cancel: Driver is already assigned and en route.")
-            
-        refund_amount_wei = int(gross_fare * 0.95 * 10**18) 
-        
-        # 1. Execute the Sweep
-        tx_hash = sweep_escrow_on_chain(refund_amount_wei)
-        if tx_hash.startswith("ERR_"):
-            raise HTTPException(status_code=500, detail="Blockchain sweep failed")
-        
-        # 2. Update the DB
+       
+        # Mark as cancelled
         new_mode = f"{row[1]} (CANCELLED)"
-        c.execute("UPDATE ledger SET mode = ? WHERE ticket_id = ?", (new_mode, leg_ticket_id))
+        c.execute("UPDATE ledger SET mode = ? WHERE ticket_id = ? OR ticket_id LIKE ?",
+                 (new_mode, leg_ticket_id, f"%{payload.ticket_id}%"))
         conn.commit()
-        
+   
     # Apply the ₹0.50 Anti-Griefing Micro-Fee
     net_refund = max(0, gross_fare - 0.50)
-        
+   
     return {
-        "status": "user_cancelled",
-        "refund_amount_inr": round(net_refund, 2),
+        "status": "success",
+        "refund_amount": round(net_refund, 2),
         "cancellation_fee": 0.50,
         "message": "Ride cancelled. Micro-fee applied. Commuter wallet credited."
+    }
+class TripCompleteRequest(BaseModel):
+    trip_id: str
+
+class WithdrawRequest(BaseModel):
+    amount: float = None
+
+# Mock state for the hackathon demo
+driver_mock_state = {
+    "balance": 1250.00,
+    "pending_escrow": 0.0,
+    "lifetime_earnings": 4500.00
+}
+
+@app.get("/driver_wallet")
+def get_driver_wallet():
+    """Powers the Earnings tab for the Driver UI"""
+    return driver_mock_state
+
+@app.get("/active_trip")
+def get_active_trip():
+    """Checks if driver is currently assigned to a trip"""
+    return {} # Return empty dict to show Scanner by default
+
+@app.post("/complete_trip")
+def complete_driver_trip(req: TripCompleteRequest):
+    """Releases the smart contract escrow to the driver's wallet"""
+    # In reality, this triggers Web3. For the UI demo:
+    driver_mock_state["balance"] += 145.50
+    return {"status": "success", "message": "Funds released from Escrow", "fare_released": 145.50}
+
+@app.post("/withdraw_fiat")
+def withdraw_driver_fiat(req: WithdrawRequest):
+    """Triggers the Nodal Bank IMPS API to cash out the driver"""
+    withdraw_amount = req.amount if req.amount else driver_mock_state["balance"]
+    
+    if withdraw_amount > driver_mock_state["balance"]:
+        raise HTTPException(status_code=400, detail="Insufficient balance")
+        
+    driver_mock_state["balance"] -= withdraw_amount
+    return {
+        "status": "success", 
+        "amount_credited": withdraw_amount,
+        "message": "IMPS Transfer Initiated"
     }
