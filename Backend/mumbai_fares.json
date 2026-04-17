@@ -1,0 +1,1264 @@
+{
+    "train": {
+        "CHURCHGATE-MUMBAI CENTRAL": {
+            "2nd": 5,
+            "1st": 50,
+            "AC": 65,
+            "operator": "Indian Railways"
+        },
+        "CHURCHGATE-DADAR": {
+            "2nd": 5,
+            "1st": 50,
+            "AC": 65,
+            "operator": "Indian Railways"
+        },
+        "BANDRA-CHURCHGATE": {
+            "2nd": 10,
+            "1st": 75,
+            "AC": 100,
+            "operator": "Indian Railways"
+        },
+        "ANDHERI-CHURCHGATE": {
+            "2nd": 10,
+            "1st": 105,
+            "AC": 135,
+            "operator": "Indian Railways"
+        },
+        "CHURCHGATE-GOREGAON": {
+            "2nd": 10,
+            "1st": 105,
+            "AC": 135,
+            "operator": "Indian Railways"
+        },
+        "CHURCHGATE-MALAD": {
+            "2nd": 10,
+            "1st": 105,
+            "AC": 135,
+            "operator": "Indian Railways"
+        },
+        "CHURCHGATE-KANDIVALI": {
+            "2nd": 15,
+            "1st": 140,
+            "AC": 180,
+            "operator": "Indian Railways"
+        },
+        "BORIVALI-CHURCHGATE": {
+            "2nd": 15,
+            "1st": 140,
+            "AC": 180,
+            "operator": "Indian Railways"
+        },
+        "CHURCHGATE-DAHISAR": {
+            "2nd": 15,
+            "1st": 140,
+            "AC": 180,
+            "operator": "Indian Railways"
+        },
+        "CHURCHGATE-VASAI ROAD": {
+            "2nd": 15,
+            "1st": 165,
+            "AC": 210,
+            "operator": "Indian Railways"
+        },
+        "CHURCHGATE-VIRAR": {
+            "2nd": 20,
+            "1st": 190,
+            "AC": 235,
+            "operator": "Indian Railways"
+        },
+        "DADAR-MUMBAI CENTRAL": {
+            "2nd": 5,
+            "1st": 50,
+            "AC": 65,
+            "operator": "Indian Railways"
+        },
+        "BANDRA-MUMBAI CENTRAL": {
+            "2nd": 5,
+            "1st": 50,
+            "AC": 65,
+            "operator": "Indian Railways"
+        },
+        "ANDHERI-MUMBAI CENTRAL": {
+            "2nd": 10,
+            "1st": 75,
+            "AC": 100,
+            "operator": "Indian Railways"
+        },
+        "GOREGAON-MUMBAI CENTRAL": {
+            "2nd": 10,
+            "1st": 105,
+            "AC": 135,
+            "operator": "Indian Railways"
+        },
+        "MALAD-MUMBAI CENTRAL": {
+            "2nd": 10,
+            "1st": 105,
+            "AC": 135,
+            "operator": "Indian Railways"
+        },
+        "KANDIVALI-MUMBAI CENTRAL": {
+            "2nd": 10,
+            "1st": 105,
+            "AC": 135,
+            "operator": "Indian Railways"
+        },
+        "BORIVALI-MUMBAI CENTRAL": {
+            "2nd": 10,
+            "1st": 105,
+            "AC": 135,
+            "operator": "Indian Railways"
+        },
+        "DAHISAR-MUMBAI CENTRAL": {
+            "2nd": 15,
+            "1st": 140,
+            "AC": 180,
+            "operator": "Indian Railways"
+        },
+        "MUMBAI CENTRAL-VASAI ROAD": {
+            "2nd": 15,
+            "1st": 165,
+            "AC": 210,
+            "operator": "Indian Railways"
+        },
+        "MUMBAI CENTRAL-VIRAR": {
+            "2nd": 20,
+            "1st": 190,
+            "AC": 235,
+            "operator": "Indian Railways"
+        },
+        "BANDRA-DADAR": {
+            "2nd": 5,
+            "1st": 50,
+            "AC": 65,
+            "operator": "Indian Railways"
+        },
+        "ANDHERI-DADAR": {
+            "2nd": 10,
+            "1st": 75,
+            "AC": 100,
+            "operator": "Indian Railways"
+        },
+        "DADAR-GOREGAON": {
+            "2nd": 10,
+            "1st": 105,
+            "AC": 135,
+            "operator": "Indian Railways"
+        },
+        "DADAR-MALAD": {
+            "2nd": 10,
+            "1st": 105,
+            "AC": 135,
+            "operator": "Indian Railways"
+        },
+        "DADAR-KANDIVALI": {
+            "2nd": 10,
+            "1st": 105,
+            "AC": 135,
+            "operator": "Indian Railways"
+        },
+        "BORIVALI-DADAR": {
+            "2nd": 10,
+            "1st": 105,
+            "AC": 135,
+            "operator": "Indian Railways"
+        },
+        "DADAR-DAHISAR": {
+            "2nd": 15,
+            "1st": 140,
+            "AC": 180,
+            "operator": "Indian Railways"
+        },
+        "DADAR-VASAI ROAD": {
+            "2nd": 15,
+            "1st": 165,
+            "AC": 210,
+            "operator": "Indian Railways"
+        },
+        "DADAR-VIRAR": {
+            "2nd": 15,
+            "1st": 165,
+            "AC": 210,
+            "operator": "Indian Railways"
+        },
+        "ANDHERI-BANDRA": {
+            "2nd": 5,
+            "1st": 50,
+            "AC": 65,
+            "operator": "Indian Railways"
+        },
+        "BANDRA-GOREGAON": {
+            "2nd": 10,
+            "1st": 75,
+            "AC": 100,
+            "operator": "Indian Railways"
+        },
+        "BANDRA-MALAD": {
+            "2nd": 10,
+            "1st": 75,
+            "AC": 100,
+            "operator": "Indian Railways"
+        },
+        "BANDRA-KANDIVALI": {
+            "2nd": 10,
+            "1st": 75,
+            "AC": 100,
+            "operator": "Indian Railways"
+        },
+        "BANDRA-BORIVALI": {
+            "2nd": 10,
+            "1st": 75,
+            "AC": 100,
+            "operator": "Indian Railways"
+        },
+        "BANDRA-DAHISAR": {
+            "2nd": 10,
+            "1st": 105,
+            "AC": 135,
+            "operator": "Indian Railways"
+        },
+        "BANDRA-VASAI ROAD": {
+            "2nd": 15,
+            "1st": 140,
+            "AC": 180,
+            "operator": "Indian Railways"
+        },
+        "BANDRA-VIRAR": {
+            "2nd": 15,
+            "1st": 165,
+            "AC": 210,
+            "operator": "Indian Railways"
+        },
+        "ANDHERI-GOREGAON": {
+            "2nd": 5,
+            "1st": 50,
+            "AC": 65,
+            "operator": "Indian Railways"
+        },
+        "ANDHERI-MALAD": {
+            "2nd": 5,
+            "1st": 50,
+            "AC": 65,
+            "operator": "Indian Railways"
+        },
+        "ANDHERI-KANDIVALI": {
+            "2nd": 5,
+            "1st": 50,
+            "AC": 65,
+            "operator": "Indian Railways"
+        },
+        "ANDHERI-BORIVALI": {
+            "2nd": 10,
+            "1st": 75,
+            "AC": 100,
+            "operator": "Indian Railways"
+        },
+        "ANDHERI-DAHISAR": {
+            "2nd": 10,
+            "1st": 75,
+            "AC": 100,
+            "operator": "Indian Railways"
+        },
+        "ANDHERI-VASAI ROAD": {
+            "2nd": 10,
+            "1st": 105,
+            "AC": 135,
+            "operator": "Indian Railways"
+        },
+        "ANDHERI-VIRAR": {
+            "2nd": 15,
+            "1st": 140,
+            "AC": 180,
+            "operator": "Indian Railways"
+        },
+        "GOREGAON-MALAD": {
+            "2nd": 5,
+            "1st": 50,
+            "AC": 65,
+            "operator": "Indian Railways"
+        },
+        "GOREGAON-KANDIVALI": {
+            "2nd": 5,
+            "1st": 50,
+            "AC": 65,
+            "operator": "Indian Railways"
+        },
+        "BORIVALI-GOREGAON": {
+            "2nd": 5,
+            "1st": 50,
+            "AC": 65,
+            "operator": "Indian Railways"
+        },
+        "DAHISAR-GOREGAON": {
+            "2nd": 5,
+            "1st": 50,
+            "AC": 65,
+            "operator": "Indian Railways"
+        },
+        "GOREGAON-VASAI ROAD": {
+            "2nd": 10,
+            "1st": 105,
+            "AC": 135,
+            "operator": "Indian Railways"
+        },
+        "GOREGAON-VIRAR": {
+            "2nd": 15,
+            "1st": 140,
+            "AC": 180,
+            "operator": "Indian Railways"
+        },
+        "KANDIVALI-MALAD": {
+            "2nd": 5,
+            "1st": 50,
+            "AC": 65,
+            "operator": "Indian Railways"
+        },
+        "BORIVALI-MALAD": {
+            "2nd": 5,
+            "1st": 50,
+            "AC": 65,
+            "operator": "Indian Railways"
+        },
+        "DAHISAR-MALAD": {
+            "2nd": 5,
+            "1st": 50,
+            "AC": 65,
+            "operator": "Indian Railways"
+        },
+        "MALAD-VASAI ROAD": {
+            "2nd": 10,
+            "1st": 105,
+            "AC": 135,
+            "operator": "Indian Railways"
+        },
+        "MALAD-VIRAR": {
+            "2nd": 15,
+            "1st": 140,
+            "AC": 180,
+            "operator": "Indian Railways"
+        },
+        "BORIVALI-KANDIVALI": {
+            "2nd": 5,
+            "1st": 50,
+            "AC": 65,
+            "operator": "Indian Railways"
+        },
+        "DAHISAR-KANDIVALI": {
+            "2nd": 5,
+            "1st": 50,
+            "AC": 65,
+            "operator": "Indian Railways"
+        },
+        "KANDIVALI-VASAI ROAD": {
+            "2nd": 10,
+            "1st": 105,
+            "AC": 135,
+            "operator": "Indian Railways"
+        },
+        "KANDIVALI-VIRAR": {
+            "2nd": 10,
+            "1st": 105,
+            "AC": 135,
+            "operator": "Indian Railways"
+        },
+        "BORIVALI-DAHISAR": {
+            "2nd": 5,
+            "1st": 50,
+            "AC": 65,
+            "operator": "Indian Railways"
+        },
+        "BORIVALI-VASAI ROAD": {
+            "2nd": 10,
+            "1st": 75,
+            "AC": 100,
+            "operator": "Indian Railways"
+        },
+        "BORIVALI-VIRAR": {
+            "2nd": 10,
+            "1st": 105,
+            "AC": 135,
+            "operator": "Indian Railways"
+        },
+        "DAHISAR-VASAI ROAD": {
+            "2nd": 10,
+            "1st": 75,
+            "AC": 100,
+            "operator": "Indian Railways"
+        },
+        "DAHISAR-VIRAR": {
+            "2nd": 10,
+            "1st": 105,
+            "AC": 135,
+            "operator": "Indian Railways"
+        },
+        "VASAI ROAD-VIRAR": {
+            "2nd": 5,
+            "1st": 50,
+            "AC": 65,
+            "operator": "Indian Railways"
+        }
+    },
+    "metro": {
+        "DN NAGAR-VERSOVA": {
+            "standard": 10,
+            "operator": "MMOPL (Reliance)"
+        },
+        "AZAD NAGAR-VERSOVA": {
+            "standard": 10,
+            "operator": "MMOPL (Reliance)"
+        },
+        "ANDHERI-VERSOVA": {
+            "standard": 10,
+            "operator": "MMOPL (Reliance)"
+        },
+        "VERSOVA-WEH": {
+            "standard": 20,
+            "operator": "MMOPL (Reliance)"
+        },
+        "CHAKALA-VERSOVA": {
+            "standard": 20,
+            "operator": "MMOPL (Reliance)"
+        },
+        "AIRPORT ROAD-VERSOVA": {
+            "standard": 20,
+            "operator": "MMOPL (Reliance)"
+        },
+        "MAROL NAKA-VERSOVA": {
+            "standard": 20,
+            "operator": "MMOPL (Reliance)"
+        },
+        "SAKI NAKA-VERSOVA": {
+            "standard": 20,
+            "operator": "MMOPL (Reliance)"
+        },
+        "ASALPHA-VERSOVA": {
+            "standard": 20,
+            "operator": "MMOPL (Reliance)"
+        },
+        "GHATKOPAR-VERSOVA": {
+            "standard": 20,
+            "operator": "MMOPL (Reliance)"
+        },
+        "AZAD NAGAR-DN NAGAR": {
+            "standard": 10,
+            "operator": "MMOPL (Reliance)"
+        },
+        "ANDHERI-DN NAGAR": {
+            "standard": 10,
+            "operator": "MMOPL (Reliance)"
+        },
+        "DN NAGAR-WEH": {
+            "standard": 20,
+            "operator": "MMOPL (Reliance)"
+        },
+        "CHAKALA-DN NAGAR": {
+            "standard": 20,
+            "operator": "MMOPL (Reliance)"
+        },
+        "AIRPORT ROAD-DN NAGAR": {
+            "standard": 20,
+            "operator": "MMOPL (Reliance)"
+        },
+        "DN NAGAR-MAROL NAKA": {
+            "standard": 20,
+            "operator": "MMOPL (Reliance)"
+        },
+        "DN NAGAR-SAKI NAKA": {
+            "standard": 20,
+            "operator": "MMOPL (Reliance)"
+        },
+        "ASALPHA-DN NAGAR": {
+            "standard": 20,
+            "operator": "MMOPL (Reliance)"
+        },
+        "DN NAGAR-GHATKOPAR": {
+            "standard": 20,
+            "operator": "MMOPL (Reliance)"
+        },
+        "ANDHERI-AZAD NAGAR": {
+            "standard": 10,
+            "operator": "MMOPL (Reliance)"
+        },
+        "AZAD NAGAR-WEH": {
+            "standard": 10,
+            "operator": "MMOPL (Reliance)"
+        },
+        "AZAD NAGAR-CHAKALA": {
+            "standard": 20,
+            "operator": "MMOPL (Reliance)"
+        },
+        "AIRPORT ROAD-AZAD NAGAR": {
+            "standard": 20,
+            "operator": "MMOPL (Reliance)"
+        },
+        "AZAD NAGAR-MAROL NAKA": {
+            "standard": 20,
+            "operator": "MMOPL (Reliance)"
+        },
+        "AZAD NAGAR-SAKI NAKA": {
+            "standard": 20,
+            "operator": "MMOPL (Reliance)"
+        },
+        "ASALPHA-AZAD NAGAR": {
+            "standard": 20,
+            "operator": "MMOPL (Reliance)"
+        },
+        "AZAD NAGAR-GHATKOPAR": {
+            "standard": 20,
+            "operator": "MMOPL (Reliance)"
+        },
+        "ANDHERI-WEH": {
+            "standard": 10,
+            "operator": "MMOPL (Reliance)"
+        },
+        "ANDHERI-CHAKALA": {
+            "standard": 10,
+            "operator": "MMOPL (Reliance)"
+        },
+        "AIRPORT ROAD-ANDHERI": {
+            "standard": 20,
+            "operator": "MMOPL (Reliance)"
+        },
+        "ANDHERI-MAROL NAKA": {
+            "standard": 20,
+            "operator": "MMOPL (Reliance)"
+        },
+        "ANDHERI-SAKI NAKA": {
+            "standard": 20,
+            "operator": "MMOPL (Reliance)"
+        },
+        "ANDHERI-ASALPHA": {
+            "standard": 20,
+            "operator": "MMOPL (Reliance)"
+        },
+        "ANDHERI-GHATKOPAR": {
+            "standard": 20,
+            "operator": "MMOPL (Reliance)"
+        },
+        "CHAKALA-WEH": {
+            "standard": 10,
+            "operator": "MMOPL (Reliance)"
+        },
+        "AIRPORT ROAD-WEH": {
+            "standard": 10,
+            "operator": "MMOPL (Reliance)"
+        },
+        "MAROL NAKA-WEH": {
+            "standard": 10,
+            "operator": "MMOPL (Reliance)"
+        },
+        "SAKI NAKA-WEH": {
+            "standard": 20,
+            "operator": "MMOPL (Reliance)"
+        },
+        "ASALPHA-WEH": {
+            "standard": 20,
+            "operator": "MMOPL (Reliance)"
+        },
+        "GHATKOPAR-WEH": {
+            "standard": 20,
+            "operator": "MMOPL (Reliance)"
+        },
+        "AIRPORT ROAD-CHAKALA": {
+            "standard": 10,
+            "operator": "MMOPL (Reliance)"
+        },
+        "CHAKALA-MAROL NAKA": {
+            "standard": 10,
+            "operator": "MMOPL (Reliance)"
+        },
+        "CHAKALA-SAKI NAKA": {
+            "standard": 10,
+            "operator": "MMOPL (Reliance)"
+        },
+        "ASALPHA-CHAKALA": {
+            "standard": 20,
+            "operator": "MMOPL (Reliance)"
+        },
+        "CHAKALA-GHATKOPAR": {
+            "standard": 20,
+            "operator": "MMOPL (Reliance)"
+        },
+        "AIRPORT ROAD-MAROL NAKA": {
+            "standard": 10,
+            "operator": "MMOPL (Reliance)"
+        },
+        "AIRPORT ROAD-SAKI NAKA": {
+            "standard": 10,
+            "operator": "MMOPL (Reliance)"
+        },
+        "AIRPORT ROAD-ASALPHA": {
+            "standard": 10,
+            "operator": "MMOPL (Reliance)"
+        },
+        "AIRPORT ROAD-GHATKOPAR": {
+            "standard": 20,
+            "operator": "MMOPL (Reliance)"
+        },
+        "MAROL NAKA-SAKI NAKA": {
+            "standard": 10,
+            "operator": "MMOPL (Reliance)"
+        },
+        "ASALPHA-MAROL NAKA": {
+            "standard": 10,
+            "operator": "MMOPL (Reliance)"
+        },
+        "GHATKOPAR-MAROL NAKA": {
+            "standard": 20,
+            "operator": "MMOPL (Reliance)"
+        },
+        "ASALPHA-SAKI NAKA": {
+            "standard": 10,
+            "operator": "MMOPL (Reliance)"
+        },
+        "GHATKOPAR-SAKI NAKA": {
+            "standard": 20,
+            "operator": "MMOPL (Reliance)"
+        },
+        "ASALPHA-GHATKOPAR": {
+            "standard": 10,
+            "operator": "MMOPL (Reliance)"
+        },
+        "ANAND NAGAR-DAHISAR EAST": {
+            "standard": 10,
+            "operator": "MMMOCL (State)"
+        },
+        "DAHISAR EAST-KANDARPADA": {
+            "standard": 10,
+            "operator": "MMMOCL (State)"
+        },
+        "DAHISAR EAST-MANDAPESHWAR": {
+            "standard": 10,
+            "operator": "MMMOCL (State)"
+        },
+        "DAHISAR EAST-EKSAR": {
+            "standard": 20,
+            "operator": "MMMOCL (State)"
+        },
+        "BORIVALI WEST-DAHISAR EAST": {
+            "standard": 20,
+            "operator": "MMMOCL (State)"
+        },
+        "DAHISAR EAST-KANDIVALI WEST": {
+            "standard": 20,
+            "operator": "MMMOCL (State)"
+        },
+        "DAHANUKARWADI-DAHISAR EAST": {
+            "standard": 20,
+            "operator": "MMMOCL (State)"
+        },
+        "DAHISAR EAST-VALNAI": {
+            "standard": 20,
+            "operator": "MMMOCL (State)"
+        },
+        "DAHISAR EAST-MALAD WEST": {
+            "standard": 20,
+            "operator": "MMMOCL (State)"
+        },
+        "DAHISAR EAST-GOREGAON WEST": {
+            "standard": 30,
+            "operator": "MMMOCL (State)"
+        },
+        "DAHISAR EAST-OSHIWARA": {
+            "standard": 30,
+            "operator": "MMMOCL (State)"
+        },
+        "ANDHERI WEST-DAHISAR EAST": {
+            "standard": 40,
+            "operator": "MMMOCL (State)"
+        },
+        "ANAND NAGAR-KANDARPADA": {
+            "standard": 10,
+            "operator": "MMMOCL (State)"
+        },
+        "ANAND NAGAR-MANDAPESHWAR": {
+            "standard": 10,
+            "operator": "MMMOCL (State)"
+        },
+        "ANAND NAGAR-EKSAR": {
+            "standard": 10,
+            "operator": "MMMOCL (State)"
+        },
+        "ANAND NAGAR-BORIVALI WEST": {
+            "standard": 20,
+            "operator": "MMMOCL (State)"
+        },
+        "ANAND NAGAR-KANDIVALI WEST": {
+            "standard": 20,
+            "operator": "MMMOCL (State)"
+        },
+        "ANAND NAGAR-DAHANUKARWADI": {
+            "standard": 20,
+            "operator": "MMMOCL (State)"
+        },
+        "ANAND NAGAR-VALNAI": {
+            "standard": 20,
+            "operator": "MMMOCL (State)"
+        },
+        "ANAND NAGAR-MALAD WEST": {
+            "standard": 20,
+            "operator": "MMMOCL (State)"
+        },
+        "ANAND NAGAR-GOREGAON WEST": {
+            "standard": 20,
+            "operator": "MMMOCL (State)"
+        },
+        "ANAND NAGAR-OSHIWARA": {
+            "standard": 30,
+            "operator": "MMMOCL (State)"
+        },
+        "ANAND NAGAR-ANDHERI WEST": {
+            "standard": 30,
+            "operator": "MMMOCL (State)"
+        },
+        "KANDARPADA-MANDAPESHWAR": {
+            "standard": 10,
+            "operator": "MMMOCL (State)"
+        },
+        "EKSAR-KANDARPADA": {
+            "standard": 10,
+            "operator": "MMMOCL (State)"
+        },
+        "BORIVALI WEST-KANDARPADA": {
+            "standard": 10,
+            "operator": "MMMOCL (State)"
+        },
+        "KANDARPADA-KANDIVALI WEST": {
+            "standard": 20,
+            "operator": "MMMOCL (State)"
+        },
+        "DAHANUKARWADI-KANDARPADA": {
+            "standard": 20,
+            "operator": "MMMOCL (State)"
+        },
+        "KANDARPADA-VALNAI": {
+            "standard": 20,
+            "operator": "MMMOCL (State)"
+        },
+        "KANDARPADA-MALAD WEST": {
+            "standard": 20,
+            "operator": "MMMOCL (State)"
+        },
+        "GOREGAON WEST-KANDARPADA": {
+            "standard": 20,
+            "operator": "MMMOCL (State)"
+        },
+        "KANDARPADA-OSHIWARA": {
+            "standard": 30,
+            "operator": "MMMOCL (State)"
+        },
+        "ANDHERI WEST-KANDARPADA": {
+            "standard": 30,
+            "operator": "MMMOCL (State)"
+        },
+        "EKSAR-MANDAPESHWAR": {
+            "standard": 10,
+            "operator": "MMMOCL (State)"
+        },
+        "BORIVALI WEST-MANDAPESHWAR": {
+            "standard": 10,
+            "operator": "MMMOCL (State)"
+        },
+        "KANDIVALI WEST-MANDAPESHWAR": {
+            "standard": 20,
+            "operator": "MMMOCL (State)"
+        },
+        "DAHANUKARWADI-MANDAPESHWAR": {
+            "standard": 20,
+            "operator": "MMMOCL (State)"
+        },
+        "MANDAPESHWAR-VALNAI": {
+            "standard": 20,
+            "operator": "MMMOCL (State)"
+        },
+        "MALAD WEST-MANDAPESHWAR": {
+            "standard": 20,
+            "operator": "MMMOCL (State)"
+        },
+        "GOREGAON WEST-MANDAPESHWAR": {
+            "standard": 20,
+            "operator": "MMMOCL (State)"
+        },
+        "MANDAPESHWAR-OSHIWARA": {
+            "standard": 20,
+            "operator": "MMMOCL (State)"
+        },
+        "ANDHERI WEST-MANDAPESHWAR": {
+            "standard": 30,
+            "operator": "MMMOCL (State)"
+        },
+        "BORIVALI WEST-EKSAR": {
+            "standard": 10,
+            "operator": "MMMOCL (State)"
+        },
+        "EKSAR-KANDIVALI WEST": {
+            "standard": 20,
+            "operator": "MMMOCL (State)"
+        },
+        "DAHANUKARWADI-EKSAR": {
+            "standard": 20,
+            "operator": "MMMOCL (State)"
+        },
+        "EKSAR-VALNAI": {
+            "standard": 20,
+            "operator": "MMMOCL (State)"
+        },
+        "EKSAR-MALAD WEST": {
+            "standard": 20,
+            "operator": "MMMOCL (State)"
+        },
+        "EKSAR-GOREGAON WEST": {
+            "standard": 20,
+            "operator": "MMMOCL (State)"
+        },
+        "EKSAR-OSHIWARA": {
+            "standard": 20,
+            "operator": "MMMOCL (State)"
+        },
+        "ANDHERI WEST-EKSAR": {
+            "standard": 30,
+            "operator": "MMMOCL (State)"
+        },
+        "BORIVALI WEST-KANDIVALI WEST": {
+            "standard": 10,
+            "operator": "MMMOCL (State)"
+        },
+        "BORIVALI WEST-DAHANUKARWADI": {
+            "standard": 10,
+            "operator": "MMMOCL (State)"
+        },
+        "BORIVALI WEST-VALNAI": {
+            "standard": 20,
+            "operator": "MMMOCL (State)"
+        },
+        "BORIVALI WEST-MALAD WEST": {
+            "standard": 20,
+            "operator": "MMMOCL (State)"
+        },
+        "BORIVALI WEST-GOREGAON WEST": {
+            "standard": 20,
+            "operator": "MMMOCL (State)"
+        },
+        "BORIVALI WEST-OSHIWARA": {
+            "standard": 20,
+            "operator": "MMMOCL (State)"
+        },
+        "ANDHERI WEST-BORIVALI WEST": {
+            "standard": 30,
+            "operator": "MMMOCL (State)"
+        },
+        "DAHANUKARWADI-KANDIVALI WEST": {
+            "standard": 10,
+            "operator": "MMMOCL (State)"
+        },
+        "KANDIVALI WEST-VALNAI": {
+            "standard": 10,
+            "operator": "MMMOCL (State)"
+        },
+        "KANDIVALI WEST-MALAD WEST": {
+            "standard": 10,
+            "operator": "MMMOCL (State)"
+        },
+        "GOREGAON WEST-KANDIVALI WEST": {
+            "standard": 20,
+            "operator": "MMMOCL (State)"
+        },
+        "KANDIVALI WEST-OSHIWARA": {
+            "standard": 20,
+            "operator": "MMMOCL (State)"
+        },
+        "ANDHERI WEST-KANDIVALI WEST": {
+            "standard": 20,
+            "operator": "MMMOCL (State)"
+        },
+        "DAHANUKARWADI-VALNAI": {
+            "standard": 10,
+            "operator": "MMMOCL (State)"
+        },
+        "DAHANUKARWADI-MALAD WEST": {
+            "standard": 10,
+            "operator": "MMMOCL (State)"
+        },
+        "DAHANUKARWADI-GOREGAON WEST": {
+            "standard": 20,
+            "operator": "MMMOCL (State)"
+        },
+        "DAHANUKARWADI-OSHIWARA": {
+            "standard": 20,
+            "operator": "MMMOCL (State)"
+        },
+        "ANDHERI WEST-DAHANUKARWADI": {
+            "standard": 20,
+            "operator": "MMMOCL (State)"
+        },
+        "MALAD WEST-VALNAI": {
+            "standard": 10,
+            "operator": "MMMOCL (State)"
+        },
+        "GOREGAON WEST-VALNAI": {
+            "standard": 20,
+            "operator": "MMMOCL (State)"
+        },
+        "OSHIWARA-VALNAI": {
+            "standard": 20,
+            "operator": "MMMOCL (State)"
+        },
+        "ANDHERI WEST-VALNAI": {
+            "standard": 20,
+            "operator": "MMMOCL (State)"
+        },
+        "GOREGAON WEST-MALAD WEST": {
+            "standard": 10,
+            "operator": "MMMOCL (State)"
+        },
+        "MALAD WEST-OSHIWARA": {
+            "standard": 20,
+            "operator": "MMMOCL (State)"
+        },
+        "ANDHERI WEST-MALAD WEST": {
+            "standard": 20,
+            "operator": "MMMOCL (State)"
+        },
+        "GOREGAON WEST-OSHIWARA": {
+            "standard": 10,
+            "operator": "MMMOCL (State)"
+        },
+        "ANDHERI WEST-GOREGAON WEST": {
+            "standard": 20,
+            "operator": "MMMOCL (State)"
+        },
+        "ANDHERI WEST-OSHIWARA": {
+            "standard": 20,
+            "operator": "MMMOCL (State)"
+        },
+        "DAHISAR EAST-OVARIPADA": {
+            "standard": 10,
+            "operator": "MMMOCL (State)"
+        },
+        "DAHISAR EAST-NATIONAL PARK": {
+            "standard": 10,
+            "operator": "MMMOCL (State)"
+        },
+        "DAHISAR EAST-DEVIPADA": {
+            "standard": 10,
+            "operator": "MMMOCL (State)"
+        },
+        "DAHISAR EAST-MAGATHANE": {
+            "standard": 20,
+            "operator": "MMMOCL (State)"
+        },
+        "DAHISAR EAST-POISAR": {
+            "standard": 20,
+            "operator": "MMMOCL (State)"
+        },
+        "AKURLI-DAHISAR EAST": {
+            "standard": 20,
+            "operator": "MMMOCL (State)"
+        },
+        "DAHISAR EAST-KURAR": {
+            "standard": 20,
+            "operator": "MMMOCL (State)"
+        },
+        "DAHISAR EAST-DINDOSHI": {
+            "standard": 20,
+            "operator": "MMMOCL (State)"
+        },
+        "AAREY-DAHISAR EAST": {
+            "standard": 20,
+            "operator": "MMMOCL (State)"
+        },
+        "DAHISAR EAST-GOREGAON E": {
+            "standard": 20,
+            "operator": "MMMOCL (State)"
+        },
+        "DAHISAR EAST-JOGESHWARI E": {
+            "standard": 20,
+            "operator": "MMMOCL (State)"
+        },
+        "DAHISAR EAST-GUNDAVALI": {
+            "standard": 30,
+            "operator": "MMMOCL (State)"
+        },
+        "NATIONAL PARK-OVARIPADA": {
+            "standard": 10,
+            "operator": "MMMOCL (State)"
+        },
+        "DEVIPADA-OVARIPADA": {
+            "standard": 10,
+            "operator": "MMMOCL (State)"
+        },
+        "MAGATHANE-OVARIPADA": {
+            "standard": 10,
+            "operator": "MMMOCL (State)"
+        },
+        "OVARIPADA-POISAR": {
+            "standard": 20,
+            "operator": "MMMOCL (State)"
+        },
+        "AKURLI-OVARIPADA": {
+            "standard": 20,
+            "operator": "MMMOCL (State)"
+        },
+        "KURAR-OVARIPADA": {
+            "standard": 20,
+            "operator": "MMMOCL (State)"
+        },
+        "DINDOSHI-OVARIPADA": {
+            "standard": 20,
+            "operator": "MMMOCL (State)"
+        },
+        "AAREY-OVARIPADA": {
+            "standard": 20,
+            "operator": "MMMOCL (State)"
+        },
+        "GOREGAON E-OVARIPADA": {
+            "standard": 20,
+            "operator": "MMMOCL (State)"
+        },
+        "JOGESHWARI E-OVARIPADA": {
+            "standard": 20,
+            "operator": "MMMOCL (State)"
+        },
+        "GUNDAVALI-OVARIPADA": {
+            "standard": 30,
+            "operator": "MMMOCL (State)"
+        },
+        "DEVIPADA-NATIONAL PARK": {
+            "standard": 10,
+            "operator": "MMMOCL (State)"
+        },
+        "MAGATHANE-NATIONAL PARK": {
+            "standard": 10,
+            "operator": "MMMOCL (State)"
+        },
+        "NATIONAL PARK-POISAR": {
+            "standard": 10,
+            "operator": "MMMOCL (State)"
+        },
+        "AKURLI-NATIONAL PARK": {
+            "standard": 20,
+            "operator": "MMMOCL (State)"
+        },
+        "KURAR-NATIONAL PARK": {
+            "standard": 20,
+            "operator": "MMMOCL (State)"
+        },
+        "DINDOSHI-NATIONAL PARK": {
+            "standard": 20,
+            "operator": "MMMOCL (State)"
+        },
+        "AAREY-NATIONAL PARK": {
+            "standard": 20,
+            "operator": "MMMOCL (State)"
+        },
+        "GOREGAON E-NATIONAL PARK": {
+            "standard": 20,
+            "operator": "MMMOCL (State)"
+        },
+        "JOGESHWARI E-NATIONAL PARK": {
+            "standard": 20,
+            "operator": "MMMOCL (State)"
+        },
+        "GUNDAVALI-NATIONAL PARK": {
+            "standard": 30,
+            "operator": "MMMOCL (State)"
+        },
+        "DEVIPADA-MAGATHANE": {
+            "standard": 10,
+            "operator": "MMMOCL (State)"
+        },
+        "DEVIPADA-POISAR": {
+            "standard": 10,
+            "operator": "MMMOCL (State)"
+        },
+        "AKURLI-DEVIPADA": {
+            "standard": 10,
+            "operator": "MMMOCL (State)"
+        },
+        "DEVIPADA-KURAR": {
+            "standard": 20,
+            "operator": "MMMOCL (State)"
+        },
+        "DEVIPADA-DINDOSHI": {
+            "standard": 20,
+            "operator": "MMMOCL (State)"
+        },
+        "AAREY-DEVIPADA": {
+            "standard": 20,
+            "operator": "MMMOCL (State)"
+        },
+        "DEVIPADA-GOREGAON E": {
+            "standard": 20,
+            "operator": "MMMOCL (State)"
+        },
+        "DEVIPADA-JOGESHWARI E": {
+            "standard": 20,
+            "operator": "MMMOCL (State)"
+        },
+        "DEVIPADA-GUNDAVALI": {
+            "standard": 30,
+            "operator": "MMMOCL (State)"
+        },
+        "MAGATHANE-POISAR": {
+            "standard": 10,
+            "operator": "MMMOCL (State)"
+        },
+        "AKURLI-MAGATHANE": {
+            "standard": 10,
+            "operator": "MMMOCL (State)"
+        },
+        "KURAR-MAGATHANE": {
+            "standard": 10,
+            "operator": "MMMOCL (State)"
+        },
+        "DINDOSHI-MAGATHANE": {
+            "standard": 20,
+            "operator": "MMMOCL (State)"
+        },
+        "AAREY-MAGATHANE": {
+            "standard": 20,
+            "operator": "MMMOCL (State)"
+        },
+        "GOREGAON E-MAGATHANE": {
+            "standard": 20,
+            "operator": "MMMOCL (State)"
+        },
+        "JOGESHWARI E-MAGATHANE": {
+            "standard": 20,
+            "operator": "MMMOCL (State)"
+        },
+        "GUNDAVALI-MAGATHANE": {
+            "standard": 30,
+            "operator": "MMMOCL (State)"
+        },
+        "AKURLI-POISAR": {
+            "standard": 10,
+            "operator": "MMMOCL (State)"
+        },
+        "KURAR-POISAR": {
+            "standard": 10,
+            "operator": "MMMOCL (State)"
+        },
+        "DINDOSHI-POISAR": {
+            "standard": 10,
+            "operator": "MMMOCL (State)"
+        },
+        "AAREY-POISAR": {
+            "standard": 20,
+            "operator": "MMMOCL (State)"
+        },
+        "GOREGAON E-POISAR": {
+            "standard": 20,
+            "operator": "MMMOCL (State)"
+        },
+        "JOGESHWARI E-POISAR": {
+            "standard": 20,
+            "operator": "MMMOCL (State)"
+        },
+        "GUNDAVALI-POISAR": {
+            "standard": 20,
+            "operator": "MMMOCL (State)"
+        },
+        "AKURLI-KURAR": {
+            "standard": 10,
+            "operator": "MMMOCL (State)"
+        },
+        "AKURLI-DINDOSHI": {
+            "standard": 10,
+            "operator": "MMMOCL (State)"
+        },
+        "AAREY-AKURLI": {
+            "standard": 10,
+            "operator": "MMMOCL (State)"
+        },
+        "AKURLI-GOREGAON E": {
+            "standard": 20,
+            "operator": "MMMOCL (State)"
+        },
+        "AKURLI-JOGESHWARI E": {
+            "standard": 20,
+            "operator": "MMMOCL (State)"
+        },
+        "AKURLI-GUNDAVALI": {
+            "standard": 20,
+            "operator": "MMMOCL (State)"
+        },
+        "DINDOSHI-KURAR": {
+            "standard": 10,
+            "operator": "MMMOCL (State)"
+        },
+        "AAREY-KURAR": {
+            "standard": 10,
+            "operator": "MMMOCL (State)"
+        },
+        "GOREGAON E-KURAR": {
+            "standard": 10,
+            "operator": "MMMOCL (State)"
+        },
+        "JOGESHWARI E-KURAR": {
+            "standard": 20,
+            "operator": "MMMOCL (State)"
+        },
+        "GUNDAVALI-KURAR": {
+            "standard": 20,
+            "operator": "MMMOCL (State)"
+        },
+        "AAREY-DINDOSHI": {
+            "standard": 10,
+            "operator": "MMMOCL (State)"
+        },
+        "DINDOSHI-GOREGAON E": {
+            "standard": 10,
+            "operator": "MMMOCL (State)"
+        },
+        "DINDOSHI-JOGESHWARI E": {
+            "standard": 20,
+            "operator": "MMMOCL (State)"
+        },
+        "DINDOSHI-GUNDAVALI": {
+            "standard": 20,
+            "operator": "MMMOCL (State)"
+        },
+        "AAREY-GOREGAON E": {
+            "standard": 10,
+            "operator": "MMMOCL (State)"
+        },
+        "AAREY-JOGESHWARI E": {
+            "standard": 10,
+            "operator": "MMMOCL (State)"
+        },
+        "AAREY-GUNDAVALI": {
+            "standard": 20,
+            "operator": "MMMOCL (State)"
+        },
+        "GOREGAON E-JOGESHWARI E": {
+            "standard": 10,
+            "operator": "MMMOCL (State)"
+        },
+        "GOREGAON E-GUNDAVALI": {
+            "standard": 20,
+            "operator": "MMMOCL (State)"
+        },
+        "GUNDAVALI-JOGESHWARI E": {
+            "standard": 20,
+            "operator": "MMMOCL (State)"
+        }
+    },
+    "bus": {
+        "short": {
+            "non-ac": 5,
+            "ac": 6
+        },
+        "medium": {
+            "non-ac": 10,
+            "ac": 13
+        },
+        "long": {
+            "non-ac": 15,
+            "ac": 19
+        },
+        "max": {
+            "non-ac": 20,
+            "ac": 25
+        }
+    }
+}
