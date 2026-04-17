@@ -1,5 +1,5 @@
 // src/pages/Booktrip/booktrip.jsx
-// V3: Modular Leg Builder with Gig Mode Support
+// V4: Private leg backend integration + coord-aware fare estimation
 
 import { useState, useEffect } from 'react'
 import {
@@ -83,8 +83,24 @@ function getModeColor(mode = '') {
   return 'text-cyan-400 border-cyan-500/30 bg-cyan-500/10'
 }
 
-function estimatePrivateFare(mode, distanceKm = 3) {
+// Haversine formula — gives real km between two [lat, lng] pairs
+function haversineKm(coordA, coordB) {
+  if (!coordA || !coordB) return 3 // fallback default
+  const [lat1, lon1] = coordA
+  const [lat2, lon2] = coordB
+  const R = 6371
+  const dLat = (lat2 - lat1) * Math.PI / 180
+  const dLon = (lon2 - lon1) * Math.PI / 180
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) *
+    Math.sin(dLon / 2) ** 2
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
+}
+
+function estimatePrivateFare(mode, fromCoords = null, toCoords = null) {
   const rate = PRIVATE_FARE_PER_KM[mode] || 18
+  const distanceKm = Math.min(haversineKm(fromCoords, toCoords), PRIVATE_LEG_MAX_KM)
   return Math.round(rate * distanceKm)
 }
 
@@ -158,7 +174,15 @@ function LegBuilder({ leg, index, stations, onUpdate, onRemove, canRemove, onPin
               {PRIVATE_MODES.map(m => (
                 <button
                   key={m}
-                  onClick={() => onUpdate({ ...leg, mode: m, from: '', to: '', fromCoords: null, toCoords: null, status: 'pending' })}
+                  onClick={() => onUpdate({
+                    ...leg,
+                    mode: m,
+                    from: '',
+                    to: '',
+                    fromCoords: null,
+                    toCoords: null,
+                    status: 'pending'
+                  })}
                   className={cn(
                     'text-[10px] px-2.5 py-1 rounded-lg border transition-all',
                     leg.mode === m
@@ -174,7 +198,7 @@ function LegBuilder({ leg, index, stations, onUpdate, onRemove, canRemove, onPin
         </div>
       </div>
 
-      {/* From / To — pin buttons for private, dropdowns for public */}
+      {/* From / To */}
       <div className="grid grid-cols-2 gap-3">
         <div>
           <label className="text-[10px] text-slate-500 tracking-widest uppercase font-semibold block mb-1.5">
@@ -253,7 +277,7 @@ function LegBuilder({ leg, index, stations, onUpdate, onRemove, canRemove, onPin
         </div>
       </div>
 
-      {/* Private leg: estimated fare + cap warning */}
+      {/* Private leg: estimated fare — now uses real coords */}
       {isPrivate && leg.from && leg.to && (
         <div className="mt-3 rounded-lg border border-orange-500/20 bg-orange-500/5 px-3 py-2">
           <div className="flex items-center justify-between">
@@ -261,16 +285,18 @@ function LegBuilder({ leg, index, stations, onUpdate, onRemove, canRemove, onPin
               Est. Fare (locked upfront)
             </span>
             <span className="text-sm font-bold text-orange-400">
-              ₹{estimatePrivateFare(leg.mode)} – ₹{estimatePrivateFare(leg.mode, 6)}
+              ₹{estimatePrivateFare(leg.mode, leg.fromCoords, leg.toCoords)}
             </span>
           </div>
           <p className="text-[10px] text-slate-600 mt-1">
-            Final fare calculated at driver scan · Max {PRIVATE_LEG_MAX_KM}km cap enforced
+            {leg.fromCoords && leg.toCoords
+              ? `~${haversineKm(leg.fromCoords, leg.toCoords).toFixed(1)} km · Max ${PRIVATE_LEG_MAX_KM}km cap enforced`
+              : `Estimated distance · Max ${PRIVATE_LEG_MAX_KM}km cap enforced`
+            }
           </p>
         </div>
       )}
 
-      {/* Connector arrow */}
       {index >= 0 && (
         <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 z-10">
           <div className="w-8 h-8 rounded-full bg-slate-900 border border-white/10 flex items-center justify-center">
@@ -319,7 +345,7 @@ export default function BookTrip() {
     { id: uuidv4(), mode: 'Local Train (Western)', from: '', to: '', status: 'confirmed', estimatedFare: 0 }
   ])
 
-  const [pinModal, setPinModal] = useState(null) // null | { legIndex, field: 'from'|'to' }
+  const [pinModal, setPinModal] = useState(null)
 
   const [passengerData, setPassengerData] = useState({
     adults: 1, children: 0, childrenWithSeats: 0, totalPassengers: 1
@@ -362,7 +388,12 @@ export default function BookTrip() {
 
   function updateLeg(index, updatedLeg) {
     if (isPrivateMode(updatedLeg.mode)) {
-      updatedLeg.estimatedFare = estimatePrivateFare(updatedLeg.mode)
+      // Recalculate fare using coords if both are set
+      updatedLeg.estimatedFare = estimatePrivateFare(
+        updatedLeg.mode,
+        updatedLeg.fromCoords,
+        updatedLeg.toCoords
+      )
       updatedLeg.status = 'pending'
     } else {
       updatedLeg.estimatedFare = 0
@@ -380,10 +411,21 @@ export default function BookTrip() {
   function handlePinConfirm({ lat, lng, label }) {
     const { legIndex, field } = pinModal
     setPinModal(null)
+
     setLegs(prev => prev.map((leg, i) => {
       if (i !== legIndex) return leg
       const coordKey = field === 'from' ? 'fromCoords' : 'toCoords'
-      return { ...leg, [field]: label, [coordKey]: [lat, lng] }
+      const updated = { ...leg, [field]: label, [coordKey]: [lat, lng] }
+
+      // Recalculate fare now that we have fresh coords
+      if (isPrivateMode(updated.mode)) {
+        updated.estimatedFare = estimatePrivateFare(
+          updated.mode,
+          updated.fromCoords,
+          updated.toCoords
+        )
+      }
+      return updated
     }))
   }
 
@@ -396,6 +438,9 @@ export default function BookTrip() {
       if (!leg.from) return `Leg ${i + 1}: Please fill in the origin.`
       if (!leg.to) return `Leg ${i + 1}: Please fill in the destination.`
       if (leg.from === leg.to) return `Leg ${i + 1}: Origin and destination can't be the same.`
+      if (isPrivateMode(leg.mode) && (!leg.fromCoords || !leg.toCoords)) {
+        return `Leg ${i + 1}: Please pin both pickup and drop locations on the map.`
+      }
     }
     return null
   }
@@ -420,6 +465,7 @@ export default function BookTrip() {
           updatedLegs[i] = { ...leg, estimatedFare: 20 }
         }
       }
+      // Private legs: fare already computed from coords in updateLeg/handlePinConfirm
     }
     setLegs(updatedLegs)
     return updatedLegs
@@ -478,7 +524,12 @@ export default function BookTrip() {
     newTicket.qr_payload = qrPayload
 
     try {
+      // ── Send ALL legs to backend, separated by type ──────────────────────
+
       const publicLegs = legs.filter(l => !isPrivateMode(l.mode))
+      const privateLegs = legs.filter(l => isPrivateMode(l.mode))
+
+      // Public legs — existing booking flow
       if (publicLegs.length > 0) {
         await bookTicket({
           commuter_name: name,
@@ -487,9 +538,38 @@ export default function BookTrip() {
           mode: firstLeg.mode,
           ticket_id,
           passengers: passengerData,
-          legs: legs
+          legs: publicLegs
         })
       }
+
+      // Private legs — sent separately with full coord payload
+      // Backend receives these as "pre-registered" rides awaiting driver scan
+      if (privateLegs.length > 0) {
+        await api.post('/book_private_legs', {
+          ticket_id,
+          commuter_name: name,
+          passengers: passengerData,
+          legs: privateLegs.map(leg => ({
+            leg_id: leg.id,
+            mode: leg.mode,
+            pickup_label: leg.from,
+            drop_label: leg.to,
+            pickup_coords: leg.fromCoords
+              ? { lat: leg.fromCoords[0], lng: leg.fromCoords[1] }
+              : null,
+            drop_coords: leg.toCoords
+              ? { lat: leg.toCoords[0], lng: leg.toCoords[1] }
+              : null,
+            estimated_fare: leg.estimatedFare,
+            estimated_distance_km: leg.fromCoords && leg.toCoords
+              ? parseFloat(haversineKm(leg.fromCoords, leg.toCoords).toFixed(2))
+              : null,
+            status: 'pending'
+          }))
+        })
+      }
+
+      // ── Deduct balance ───────────────────────────────────────────────────
 
       const { ok, reason } = deductBalance(totalFare)
       if (!ok) {
@@ -503,13 +583,19 @@ export default function BookTrip() {
       setStep(2)
 
     } catch (err) {
-      const { ok, reason } = deductBalance(totalFare)
-      if (!ok) {
-        setBalanceError(reason)
+      // If public booking failed but private-only journey — still try to complete
+      const isPrivateOnly = legs.every(l => isPrivateMode(l.mode))
+      if (isPrivateOnly) {
+        const { ok, reason } = deductBalance(totalFare)
+        if (!ok) {
+          setBalanceError(reason)
+        } else {
+          saveTicket(newTicket)
+          setTicket(newTicket)
+          setStep(2)
+        }
       } else {
-        saveTicket(newTicket)
-        setTicket(newTicket)
-        setStep(2)
+        setError('Booking failed. Please try again.')
       }
     } finally {
       setLoading(false)
