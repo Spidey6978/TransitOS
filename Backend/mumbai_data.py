@@ -35,8 +35,35 @@ MUMBAI_LOCATIONS = {
     "Vashi": [73.0033, 19.0745],
     "Panvel": [73.1107, 18.9894],
     "Gateway of India (Ferry)": [72.8347, 18.9220],
-    "Alibaug (Jetty)": [72.8710, 18.6430]
+    "Alibaug (Jetty)": [72.8710, 18.6430],
+
+    # 🚕 V3: GIG TRANSIT CUSTOM LOCATIONS (Deterministic Dictionary)
+    "Home (Apartment)": [72.8400, 19.0596], # Maps to a spot near Bandra
+    "Office (BKC)": [72.8650, 19.0660],     # Maps to BKC
+    "Airport T2": [72.8743, 19.0974],
+    "Phoenix Mall": [72.8222, 18.9953]
 }
 
 def get_coords(station_name):
+    # Returns default coordinates if not found to prevent crashes
     return MUMBAI_LOCATIONS.get(station_name, [72.8427, 19.0178])
+
+# Add this function to the bottom of your Backend/mumbai_data.py file
+
+def get_coords(location_string: str):
+    """
+    V3 Update: Accepts station names OR raw "lat,lng" strings from the frontend map.
+    Returns format: [longitude, latitude] for OSRM.
+    """
+    # 1. Check if it's a raw coordinate string from our Map UI (e.g. "19.0596,72.8400")
+    if "," in location_string:
+        try:
+            parts = location_string.split(",")
+            lat = float(parts[0].strip())
+            lon = float(parts[1].strip())
+            return [lon, lat] # OSRM needs [lon, lat]
+        except Exception:
+            pass # Fallback to dictionary if parsing fails
+            
+    # 2. Check if it's a known Station/Location string
+    return MUMBAI_LOCATIONS.get(location_string, [72.8427, 19.0178]) # Default to Dadar if lost

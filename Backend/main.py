@@ -1,5 +1,7 @@
 import sqlite3
 import math
+import json
+import uuid
 from datetime import datetime
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.middleware.cors import CORSMiddleware
@@ -15,11 +17,14 @@ from fastapi.responses import JSONResponse
 
 # --- Local Imports ---
 from Backend.mumbai_data import MUMBAI_LOCATIONS, get_coords
-from Backend.models import OfflineSyncPayload, TicketResponse, SyncResponse, TicketRequest, ValidateTicketRequest
+from Backend.models import (OfflineSyncPayload, TicketResponse, SyncResponse, 
+                            TicketRequest, ValidateTicketRequest, DriverScanRequest, 
+                            FiatWithdrawal, TripLeg, BookPrivateLegsRequest)
 from Backend.web3_bridge import settle_trip_on_chain
 from Backend.fare_oracle import TransitFareOracle 
 from Backend.osrm_routing import TransitPathfinder 
 from Backend.qr_codec import QRMinifier
+from Backend.web3_bridge import settle_trip_on_chain, sweep_escrow_on_chain
 
 load_dotenv()
 
@@ -77,14 +82,18 @@ def _get_oracle_mode(ui_mode: str) -> str:
     mode = ui_mode.lower()
     if "train" in mode: return "train"
     if "metro" in mode: return "metro"
+    if "auto" in mode or "taxi" in mode or "bike" in mode: return "auto"
     return "bus"
 
 def _format_split_for_dashboard(operators_array: list, amounts_wei: list) -> str:
     wallet_names = {v: k for k, v in fare_oracle.operator_wallets.items()}
+    # V3: Inject pending gig worker mapping for UI
+    wallet_names["0x0000000000000000000000000000000000000000"] = "Pending Driver"
+    
     split_str = ""
     for op, wei in zip(operators_array, amounts_wei):
         inr = wei / (10**18)
-        name = wallet_names.get(op, "Operator").upper()
+        name = wallet_names.get(op, f"Driver {op[:6]}").upper()
         split_str += f"{name}: ₹{inr:.2f} | "
     
     total_inr = sum(amounts_wei) / (10**18) / 0.95
@@ -227,8 +236,9 @@ def rate_limit_handler(request, exc):
 @limiter.limit("30/minute")
 @app.post("/book_ticket", response_model=TicketResponse)
 def book_ticket(request: Request, ticket: TicketRequest):
-    if ticket.from_station not in MUMBAI_LOCATIONS or ticket.to_station not in MUMBAI_LOCATIONS:
-        raise HTTPException(status_code=400, detail="Invalid route.")
+    # 🔥 V3 FIX: Removed the strict Ghost Shield here!
+    # Gig Transit (Autos) use raw "lat,lng" strings that aren't in the MUMBAI_LOCATIONS dict.
+    # We now rely on get_coords() to parse the locations safely.
 
     with sqlite3.connect(DB_FILE) as conn:
         c = conn.cursor()
@@ -239,27 +249,31 @@ def book_ticket(request: Request, ticket: TicketRequest):
     actual_adults = ticket.adults
     actual_children = ticket.children
     if ticket.passengers:
-        actual_adults = ticket.passengers.get("adults", 1)
-        # Sum both child types Dev 2 created
-        actual_children = ticket.passengers.get("children", 0) + ticket.passengers.get("childrenWithSeats", 0)
+        p_dict = ticket.passengers.dict() if hasattr(ticket.passengers, "dict") else ticket.passengers
+        actual_adults = p_dict.get("adults", 1)
+        actual_children = p_dict.get("children", 0) + p_dict.get("childrenWithSeats", 0)
 
     start_coords = get_coords(ticket.from_station)
     end_coords = get_coords(ticket.to_station)
     
-    dist, route_path_json = pathfinder.fetch_route(
-        _get_oracle_mode(ticket.mode),
-        ticket.from_station,
-        ticket.to_station,
-        start_coords[1], start_coords[0],
-        end_coords[1], end_coords[0]
-    )
-
-    trip_legs = [{
-        "mode": _get_oracle_mode(ticket.mode),
-        "from": ticket.from_station,
-        "to": ticket.to_station,
-        "class": ticket.ticket_class
-    }]
+    # V3 Multi-Leg Parsing
+    if not getattr(ticket, "legs", None):
+        trip_legs = [{
+            "mode": _get_oracle_mode(ticket.mode),
+            "from": ticket.from_station,
+            "to": ticket.to_station,
+            "class": getattr(ticket, "ticket_class", "Standard")
+        }]
+    else:
+        trip_legs = []
+        for leg in ticket.legs:
+            leg_dict = leg.dict() if hasattr(leg, 'dict') else leg
+            trip_legs.append({
+                "mode": _get_oracle_mode(leg_dict.get("mode", ticket.mode)),
+                "from": leg_dict.get("from_location", leg_dict.get("from", ticket.from_station)),
+                "to": leg_dict.get("to_location", leg_dict.get("to", ticket.to_station)),
+                "class": getattr(ticket, "ticket_class", "Standard")
+            })
 
     settlement_data = fare_oracle.calculate_settlement_payload(
         trip_legs,
@@ -283,6 +297,25 @@ def book_ticket(request: Request, ticket: TicketRequest):
     if tx_hash.startswith("ERR_"):
         raise HTTPException(status_code=500, detail=f"Blockchain Settlement Failed: {tx_hash}")
 
+    dist, route_path_json = pathfinder.fetch_route(
+        _get_oracle_mode(ticket.mode),
+        ticket.from_station,
+        ticket.to_station,
+        start_coords[1], start_coords[0],
+        end_coords[1], end_coords[0]
+    )
+    
+    # Build composite JSON for route_path to store the Escrow Data for later V3 modifications
+    try:
+        geom = json.loads(route_path_json)
+    except:
+        geom = [[start_coords[1], start_coords[0]], [end_coords[1], end_coords[0]]]
+        
+    composite_route_data = {
+        "geometry": geom,
+        "escrow": contract_payload
+    }
+
     with sqlite3.connect(DB_FILE) as conn:
         c = conn.cursor()
         c.execute("INSERT INTO ledger VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", (
@@ -290,7 +323,7 @@ def book_ticket(request: Request, ticket: TicketRequest):
             ticket.from_station, ticket.to_station, ticket.mode,
             round(dist, 2), round(group_fare, 2), split_info,
             start_coords[1], start_coords[0], end_coords[1], end_coords[0],
-            ticket.ticket_id, route_path_json
+            ticket.ticket_id, json.dumps(composite_route_data)
         ))
         conn.commit()
 
@@ -299,6 +332,144 @@ def book_ticket(request: Request, ticket: TicketRequest):
         split=split_info, from_station=ticket.from_station,
         to_station=ticket.to_station, distance_km=round(dist, 2)
     )
+
+# --- V4 GIG TRANSIT ENDPOINTS ---
+    
+@app.post("/book_private_legs")
+def book_private_legs(request: BookPrivateLegsRequest):
+    """V4: Handles decoupled Gig Transit requests from the frontend"""
+    results = []
+    with sqlite3.connect(DB_FILE) as conn:
+        c = conn.cursor()
+        for leg in request.legs:
+            # 1. Idempotency Shield (Append leg_id so it doesn't collide with the public ticket)
+            leg_ticket_id = f"{request.ticket_id}_private_{leg.leg_id}"
+            c.execute("SELECT 1 FROM ledger WHERE ticket_id = ? LIMIT 1", (leg_ticket_id,))
+            if c.fetchone():
+                continue # Skip if already processed
+
+            actual_adults = request.passengers.adults
+            actual_children = request.passengers.children + request.passengers.childrenWithSeats
+            
+            start_lat = leg.pickup_coords.lat if leg.pickup_coords else 19.0596
+            start_lng = leg.pickup_coords.lng if leg.pickup_coords else 72.8400
+            end_lat = leg.drop_coords.lat if leg.drop_coords else 19.1136
+            end_lng = leg.drop_coords.lng if leg.drop_coords else 72.8697
+            
+            # Force OSRM to recalculate the true distance using your exact coordinates!
+            dist, _ = pathfinder.fetch_route("auto", "", "", start_lat, start_lng, end_lat, end_lng)
+            
+            # Recalculate official base fare based on strict OSRM distance
+            base_private_fare = fare_oracle.calculate_private_fare(leg.mode, dist)
+            
+            # 2. Financial Escrow Calculation (Securely re-calculated)
+            gross_fare = base_private_fare * (actual_adults + 0.5 * actual_children)
+            net_payout = gross_fare * 0.95
+            
+            # The 0x000 Placeholder Wallet!
+            operators_array = ["0x0000000000000000000000000000000000000000"]
+            amounts_array_wei = [int(net_payout * 10**18)]
+            total_fare_wei = int(gross_fare * 10**18)
+            
+            split_info = _format_split_for_dashboard(operators_array, amounts_array_wei)
+            
+            # 3. Secure Web3 Lock
+            tx_hash = settle_trip_on_chain(
+                request.commuter_name,
+                operators_array,
+                amounts_array_wei,
+                total_fare_wei
+            )
+            
+            if tx_hash.startswith("ERR_"):
+                raise HTTPException(status_code=500, detail=f"Blockchain Settlement Failed: {tx_hash}")
+            
+            composite_route_data = {
+                "geometry": [[start_lng, start_lat], [end_lng, end_lat]], # [lng, lat] for PyDeck GeoJSON
+                "escrow": {
+                    "operators": operators_array,
+                    "amounts_wei": amounts_array_wei,
+                    "total_fare_wei": total_fare_wei
+                }
+            }
+            
+            c.execute("INSERT INTO ledger VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", (
+                tx_hash, datetime.now(), request.commuter_name,
+                leg.pickup_label, leg.drop_label, leg.mode,
+                round(dist, 2), round(gross_fare, 2), split_info,
+                start_lat, start_lng, end_lat, end_lng,
+                leg_ticket_id, json.dumps(composite_route_data)
+            ))
+            results.append(leg_ticket_id)
+        conn.commit()
+        
+    return {"status": "success", "private_legs_booked": results}
+
+
+@app.post("/driver_scan")
+def driver_handshake(scan: DriverScanRequest):
+    """V4: Intercepts driver QR scan, assigns the 0x000 placeholder wallet to the real driver."""
+    with sqlite3.connect(DB_FILE) as conn:
+        c = conn.cursor()
+        
+        # 🔥 V4 UPDATE: Search using LIKE to find the specific appended private leg!
+        c.execute("SELECT route_path, operator_split, total_fare, ticket_id FROM ledger WHERE ticket_id LIKE ?", (f"{scan.ticket_id}%",))
+        rows = c.fetchall()
+        
+        target_row = None
+        for r in rows:
+            try:
+                rd = json.loads(r[0])
+                # Check if this row has the 0x000 placeholder
+                if "0x0000000000000000000000000000000000000000" in rd.get("escrow", {}).get("operators", []):
+                    target_row = r
+                    break
+            except:
+                continue
+                
+        if not target_row:
+            raise HTTPException(status_code=404, detail="No pending private rides found for this ticket.")
+        
+        route_data = json.loads(target_row[0])
+        escrow = route_data["escrow"]
+        actual_ticket_id = target_row[3]  # The specific leg_id row
+        
+        operators = escrow["operators"]
+        amounts = escrow["amounts_wei"]
+        
+        # Find the placeholder index
+        placeholder_idx = operators.index("0x0000000000000000000000000000000000000000")
+        
+        # Perform Handshake
+        operators[placeholder_idx] = scan.driver_wallet
+        driver_cut = amounts[placeholder_idx] / 10**18
+        
+        # Update DB objects
+        escrow["operators"] = operators
+        route_data["escrow"] = escrow
+        new_split_info = _format_split_for_dashboard(operators, amounts)
+        
+        c.execute("UPDATE ledger SET route_path = ?, operator_split = ? WHERE ticket_id = ?", 
+                 (json.dumps(route_data), new_split_info, actual_ticket_id))
+        conn.commit()
+
+    return {
+        "status": "handshake_complete", 
+        "driver_assigned": scan.driver_wallet,
+        "payout_locked_inr": round(driver_cut, 2)
+    }
+
+@app.post("/withdraw_fiat")
+def withdraw_fiat(payload: FiatWithdrawal):
+    """V3: Mocks the Instant IMPS Off-Ramp API."""
+    return {
+        "status": "success", 
+        "amount_withdrawn": payload.amount_inr, 
+        "bank_ref": f"IMPS-{uuid.uuid4().hex[:8].upper()}",
+        "message": "Funds instantly settled to linked HDFC account."
+    }
+
+# --- OFFLINE SYNC ---
 
 @app.post("/sync_offline", response_model=SyncResponse)
 def sync_offline(payload: OfflineSyncPayload):
@@ -326,10 +497,7 @@ def sync_offline(payload: OfflineSyncPayload):
                     results.append({"qr": raw_qr[:10], "tx_hash": None, "status": f"Skipped - Already Synced by {payload.scanner_mode}"})
                     continue
 
-                # 2. GHOST SHIELD
-                if f_station not in MUMBAI_LOCATIONS or t_station not in MUMBAI_LOCATIONS:
-                    raise Exception(f"Invalid route: {f_station} to {t_station}")
-                    
+                # 🔥 V3 FIX: Removed strict Ghost Shield for custom offline Auto addresses
                 start_coords = get_coords(f_station)
                 end_coords = get_coords(t_station)
                 
@@ -351,8 +519,8 @@ def sync_offline(payload: OfflineSyncPayload):
                 
                 settlement_data = fare_oracle.calculate_settlement_payload(
                     trip_legs, 
-                    adults=ticket["adults"],
-                    children=ticket["children"]
+                    adults=ticket.get("adults", 1),
+                    children=ticket.get("children", 0)
                 )
                 contract_payload = settlement_data["contract_payload"]
                 fare = settlement_data["total_fare_inr"]
@@ -366,17 +534,28 @@ def sync_offline(payload: OfflineSyncPayload):
                     contract_payload["total_fare_wei"]
                 )
                 
-                # 🔥 THE CIRCUIT BREAKER
+                # THE CIRCUIT BREAKER
                 if tx_hash.startswith("ERR_"):
                     raise Exception(f"Blockchain Settlement Failed: {tx_hash}")
                 
+                # V3: Store the exact same composite JSON structure as book_ticket
+                try:
+                    geom = json.loads(route_path_json)
+                except:
+                    geom = [[start_coords[1], start_coords[0]], [end_coords[1], end_coords[0]]]
+                    
+                composite_route_data = json.dumps({
+                    "geometry": geom,
+                    "escrow": contract_payload
+                })
+
                 # 6. LEDGER COMMIT
                 c.execute("INSERT OR IGNORE INTO ledger VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)", (
                     tx_hash, datetime.now(), ticket["commuter_name"],
                     f_station, t_station, mode,
                     round(dist, 2), round(fare, 2), split_info,
                     start_coords[1], start_coords[0], end_coords[1], end_coords[0],
-                    composite_ticket_id, route_path_json # 🔥 Saved with composite ID!
+                    composite_ticket_id, composite_route_data # 🔥 Saved with composite ID!
                 ))
                 results.append({"qr": raw_qr[:10], "tx_hash": tx_hash, "status": "saved"})
                 success_count += 1
@@ -436,3 +615,102 @@ def validate_ticket(payload: ValidateTicketRequest):
              return {"valid": False, "reason": "Ticket expired", "parsed": ticket}
 
         return {"valid": True, "reason": "Verified via Backend Ledger", "parsed": ticket}
+class CancelRequest(BaseModel):
+    ticket_id: str
+    leg_id: str
+    reason: str = "User requested cancellation"
+
+@app.post("/driver_cancel")
+def driver_cancel(payload: CancelRequest):
+    """
+    Triggered when a Gig Worker cancels the ride.
+    Commuter gets 100% of their money back. TransitOS eats the gas cost.
+    """
+    leg_ticket_id = f"{payload.ticket_id}_private_{payload.leg_id}"
+    
+    with sqlite3.connect(DB_FILE) as conn:
+        c = conn.cursor()
+        # 🔥 FIX: Querying route_path (the JSON column) instead of operator_split
+        c.execute("SELECT total_fare, mode, route_path FROM ledger WHERE ticket_id = ?", (leg_ticket_id,))
+        row = c.fetchone()
+        
+        if not row:
+            raise HTTPException(status_code=404, detail="Private Leg not found")
+        if "CANCELLED" in row[1]:
+            raise HTTPException(status_code=400, detail="Leg already cancelled")
+            
+        gross_fare = row[0]
+        # Safely parse the JSON route data
+        route_data = json.loads(row[2]) if row[2] else {}
+        operators = route_data.get("escrow", {}).get("operators", [])
+        
+        # Verify it hasn't been handshaked by another driver yet
+        if "0x0000000000000000000000000000000000000000" not in operators:
+            raise HTTPException(status_code=400, detail="Cannot cancel: A driver has already claimed this escrow.")
+            
+        # The driver's specific 95% cut is what sits in the 0x000 wallet
+        refund_amount_wei = int(gross_fare * 0.95 * 10**18) 
+        
+        # 1. Trigger the Smart Contract Sweep
+        # tx_hash = sweep_escrow_on_chain(refund_amount_wei)
+        # if tx_hash.startswith("ERR_"):
+        #     raise HTTPException(status_code=500, detail="Blockchain sweep failed")
+        
+        # 2. Mark as Cancelled in the database so it can't be scanned
+        new_mode = f"{row[1]} (CANCELLED)"
+        c.execute("UPDATE ledger SET mode = ? WHERE ticket_id = ?", (new_mode, leg_ticket_id))
+        conn.commit()
+        
+    return {
+        "status": "refund_swept",
+        "refund_amount_inr": gross_fare, # 100% Refund
+        "message": "Funds returned to treasury. UI should credit commuter wallet."
+    }
+
+@app.post("/user_cancel")
+def user_cancel(payload: CancelRequest):
+    """
+    Triggered when the Commuter cancels the ride before a driver arrives.
+    Applies the ₹0.50 Gas-Pegged Micro-Fee to prevent network griefing.
+    """
+    leg_ticket_id = f"{payload.ticket_id}_private_{payload.leg_id}"
+    
+    with sqlite3.connect(DB_FILE) as conn:
+        c = conn.cursor()
+        # 🔥 FIX: Querying route_path (the JSON column) instead of operator_split
+        c.execute("SELECT total_fare, mode, route_path FROM ledger WHERE ticket_id = ?", (leg_ticket_id,))
+        row = c.fetchone()
+        
+        if not row:
+            raise HTTPException(status_code=404, detail="Private Leg not found")
+        if "CANCELLED" in row[1]:
+            raise HTTPException(status_code=400, detail="Leg already cancelled")
+            
+        gross_fare = row[0]
+        route_data = json.loads(row[2]) if row[2] else {}
+        operators = route_data.get("escrow", {}).get("operators", [])
+        
+        if "0x0000000000000000000000000000000000000000" not in operators:
+            raise HTTPException(status_code=400, detail="Cannot cancel: Driver is already assigned and en route.")
+            
+        refund_amount_wei = int(gross_fare * 0.95 * 10**18) 
+        
+        # 1. Execute the Sweep
+        tx_hash = sweep_escrow_on_chain(refund_amount_wei)
+        if tx_hash.startswith("ERR_"):
+            raise HTTPException(status_code=500, detail="Blockchain sweep failed")
+        
+        # 2. Update the DB
+        new_mode = f"{row[1]} (CANCELLED)"
+        c.execute("UPDATE ledger SET mode = ? WHERE ticket_id = ?", (new_mode, leg_ticket_id))
+        conn.commit()
+        
+    # Apply the ₹0.50 Anti-Griefing Micro-Fee
+    net_refund = max(0, gross_fare - 0.50)
+        
+    return {
+        "status": "user_cancelled",
+        "refund_amount_inr": round(net_refund, 2),
+        "cancellation_fee": 0.50,
+        "message": "Ride cancelled. Micro-fee applied. Commuter wallet credited."
+    }

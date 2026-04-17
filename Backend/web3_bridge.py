@@ -118,3 +118,42 @@ def settle_trip_on_chain(commuter_name: str, operators: list, amounts_wei: list,
     except Exception as e:
         print(f"🚨 Fatal Bridge Error: {e}")
         return f"ERR_FATAL_{str(e)}"
+
+def sweep_escrow_on_chain(amount_wei: int) -> str:
+    """
+    V3 REFUND ARCHITECTURE: Reclaims funds from the 0x000 placeholder wallet.
+    """
+    try:
+        max_retries = 3
+        for attempt in range(max_retries):
+            try:
+                safe_nonce = get_next_nonce(w3, account.address)
+                print(f"🧹 [Attempt {attempt+1}] Sweeping {amount_wei} Wei from Pending Escrow...")
+                
+                tx = contract.functions.reclaimPendingEscrow(amount_wei).build_transaction({
+                    'chainId': 80002,
+                    'gas': 100000, # Much lighter gas requirement than standard settlement
+                    'gasPrice': w3.eth.gas_price,
+                    'nonce': safe_nonce,
+                })
+
+                signed_tx = w3.eth.account.sign_transaction(tx, private_key=PRIVATE_KEY)
+                tx_hash = w3.eth.send_raw_transaction(signed_tx.raw_transaction)
+                
+                receipt_hash = w3.to_hex(tx_hash)
+                print(f"✅ Sweep Successful! Hash: {receipt_hash}")
+                return receipt_hash
+                
+            except Exception as e:
+                error_msg = str(e).lower()
+                if "nonce" in error_msg or "underpriced" in error_msg or "already known" in error_msg:
+                    global _current_nonce
+                    _current_nonce = None
+                    continue
+                print(f"🚨 Sweep Web3 Error: {e}")
+                return f"ERR_SWEEP_{str(e)}"
+                
+        return "ERR_NONCE_COLLISION"
+    except Exception as e:
+        print(f"🚨 Fatal Sweep Error: {e}")
+        return f"ERR_FATAL_{str(e)}"
