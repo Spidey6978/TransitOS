@@ -505,18 +505,19 @@ export default function BookTrip() {
     const firstLeg = legs[0]
     const lastLeg = legs[legs.length - 1]
 
+    // ✅ FIX: Create ticket with ALL legs data, not just first/last
     const newTicket = {
       ticket_id,
       commuter_name: name,
       from_station: firstLeg.from,
       to_station: lastLeg.to,
-      mode: firstLeg.mode,
+      mode: firstLeg.mode,  // Keep for single-leg compatibility
       fare: totalFare,
       issued_at: now.toISOString(),
       valid_until: valid_until.toISOString(),
       passengers: passengerData,
-      legs: legs,
-      is_multileg: legs.length > 1,
+      legs: legs,  // ✅ IMPORTANT: Store ALL legs here
+      is_multileg: legs.length > 1,  // ✅ Flag for multi-leg
       has_private_leg: hasPrivateLeg(legs)
     }
 
