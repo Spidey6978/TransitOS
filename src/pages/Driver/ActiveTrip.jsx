@@ -24,7 +24,7 @@ import { cn } from '@/lib/utils'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Badge } from '@/components/ui/badge'
-import { getActiveTrip, completeTrip } from '../../service/driverApi'
+import { getActiveTrip, completeTrip } from '../../service/driver_api'
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
