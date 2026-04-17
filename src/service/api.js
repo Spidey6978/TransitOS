@@ -24,7 +24,7 @@ export const getRoutes = async (fromStation, toStation) => {
   }
 }
 
-// Book ticket with group passenger data
+// Book ticket with group passenger data + multi-leg support
 export const bookTicket = async (ticketData) => {
   try {
     const response = await api.post('/book_ticket', {
@@ -33,7 +33,8 @@ export const bookTicket = async (ticketData) => {
       to_station: ticketData.to_station,
       mode: ticketData.mode,
       ticket_id: ticketData.ticket_id,
-      passengers: ticketData.passengers // NEW: group data
+      passengers: ticketData.passengers,
+      legs: ticketData.legs  // NEW: multi-leg data for escrow/driver settlement
     })
     return response.data
   } catch (error) {
