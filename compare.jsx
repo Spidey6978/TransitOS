@@ -228,7 +228,7 @@ function TicketModal({ ticket, onClose }) {
         </button>
 
         <div className="flex flex-col items-center mb-5">
-          <h2 className="text-lg font-bold tracking-widest uppercase text-[#22D3EE]">TransitOS</h2>
+          <h2 className="text-lg font-bold tracking-widest uppercase text-[#22D3EE]">TransitDost</h2>
           <p className="text-[10px] text-slate-500 tracking-widest uppercase">Mumbai Unified Transit</p>
           <span className={cn(
             'mt-2 inline-flex items-center gap-1.5 text-xs px-3 py-1 rounded-full border',

@@ -13,6 +13,7 @@ import { bookTicket } from '../../service/api'
 import { deductBalance, saveTicket } from '@/lib/walletstore'
 import GroupTicketing from '../../components/GroupTicketing'
 import QRGeneratorGrouped from '../../components/QRGeneratorGrouped'
+import PinDropMap from '../../components/PinDropMap'
 import {
   calculateGroupedFare,
   minifyMultiLegPayload,
@@ -30,13 +31,11 @@ const FALLBACK_STATIONS = [
   'Churchgate', 'Bandra', 'CST'
 ]
 
-// Private mode uses address strings, not stations
 const PRIVATE_ADDRESS_SUGGESTIONS = [
   'Home', 'Office', 'Airport (T2)', 'Hospital', 'Mall',
   'College', 'Railway Station', 'Bus Depot', 'Market'
 ]
 
-// All available modes
 const PUBLIC_MODES = [
   'Local Train (Western)',
   'Local Train (Central)',
@@ -48,18 +47,16 @@ const PUBLIC_MODES = [
 
 const PRIVATE_MODES = [
   'Auto-Rickshaw',
-  'Taxi (Kaali-Peeli)',
+  'Taxi',
   'Bike Taxi'
 ]
 
-// Per-km fare estimates for private modes (used for upfront locking)
 const PRIVATE_FARE_PER_KM = {
   'Auto-Rickshaw': 18,
-  'Taxi (Kaali-Peeli)': 25,
+  'Taxi': 25,
   'Bike Taxi': 12
 }
 
-// 25km cap for private/last-mile legs (from PDF spec)
 const PRIVATE_LEG_MAX_KM = 25
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -86,7 +83,6 @@ function getModeColor(mode = '') {
   return 'text-cyan-400 border-cyan-500/30 bg-cyan-500/10'
 }
 
-// Rough estimate: 3km default for private legs when no OSRM data yet
 function estimatePrivateFare(mode, distanceKm = 3) {
   const rate = PRIVATE_FARE_PER_KM[mode] || 18
   return Math.round(rate * distanceKm)
@@ -94,7 +90,7 @@ function estimatePrivateFare(mode, distanceKm = 3) {
 
 // ─── Single Leg Builder Component ─────────────────────────────────────────────
 
-function LegBuilder({ leg, index, stations, onUpdate, onRemove, canRemove }) {
+function LegBuilder({ leg, index, stations, onUpdate, onRemove, canRemove, onPinDrop }) {
   const isPrivate = isPrivateMode(leg.mode)
   const modeColor = getModeColor(leg.mode)
 
@@ -112,16 +108,8 @@ function LegBuilder({ leg, index, stations, onUpdate, onRemove, canRemove }) {
           modeColor
         )}>
           {getModeIcon(leg.mode)}
-          LEG {index + 1}
         </span>
 
-        {isPrivate && (
-          <span className="text-[10px] tracking-widest text-orange-400 border border-orange-500/30 bg-orange-500/10 px-2 py-0.5 rounded-md">
-            GIG MODE
-          </span>
-        )}
-
-        {/* Pending badge — shown for private legs that need driver scan */}
         {isPrivate && leg.status === 'pending' && (
           <span className="ml-auto text-[10px] tracking-widest text-amber-400 border border-amber-500/30 bg-amber-500/10 px-2 py-0.5 rounded-md animate-pulse">
             ⏳ AWAITING DRIVER SCAN
@@ -144,7 +132,6 @@ function LegBuilder({ leg, index, stations, onUpdate, onRemove, canRemove }) {
           Mode of Transport
         </label>
         <div className="flex gap-2 flex-wrap">
-          {/* Public modes */}
           <div className="w-full">
             <p className="text-[9px] text-slate-600 uppercase tracking-widest mb-1">Public Transit</p>
             <div className="flex gap-1.5 flex-wrap mb-2">
@@ -165,14 +152,13 @@ function LegBuilder({ leg, index, stations, onUpdate, onRemove, canRemove }) {
             </div>
           </div>
 
-          {/* Private modes */}
           <div className="w-full">
             <p className="text-[9px] text-slate-600 uppercase tracking-widest mb-1">Private / Gig</p>
             <div className="flex gap-1.5 flex-wrap">
               {PRIVATE_MODES.map(m => (
                 <button
                   key={m}
-                  onClick={() => onUpdate({ ...leg, mode: m, from: '', to: '', status: 'pending' })}
+                  onClick={() => onUpdate({ ...leg, mode: m, from: '', to: '', fromCoords: null, toCoords: null, status: 'pending' })}
                   className={cn(
                     'text-[10px] px-2.5 py-1 rounded-lg border transition-all',
                     leg.mode === m
@@ -188,24 +174,35 @@ function LegBuilder({ leg, index, stations, onUpdate, onRemove, canRemove }) {
         </div>
       </div>
 
-      {/* From / To Inputs — toggle between station dropdown and address input */}
+      {/* From / To — pin buttons for private, dropdowns for public */}
       <div className="grid grid-cols-2 gap-3">
         <div>
           <label className="text-[10px] text-slate-500 tracking-widest uppercase font-semibold block mb-1.5">
             {isPrivate ? 'Pickup Location' : 'From Station'}
           </label>
           {isPrivate ? (
-            // Address input for private modes
-            <input
-              type="text"
-              list={`from-suggestions-${index}`}
-              value={leg.from}
-              onChange={e => onUpdate({ ...leg, from: e.target.value })}
-              placeholder="e.g. Home, Office..."
-              className="w-full bg-slate-900/60 border border-orange-500/20 rounded-xl text-white px-3 py-2.5 text-sm focus:outline-none focus:border-orange-500/50 placeholder:text-slate-600"
-            />
+            <button
+              onClick={() => onPinDrop(index, 'from')}
+              className={cn(
+                'w-full text-left px-3 py-2.5 rounded-xl border text-sm transition-all',
+                leg.from
+                  ? 'border-cyan-500/40 bg-cyan-500/5 text-white'
+                  : 'border-orange-500/20 bg-slate-900/60 text-slate-500 hover:border-orange-500/40'
+              )}
+            >
+              {leg.from ? (
+                <span className="flex items-center gap-1.5">
+                  <MapPin className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
+                  <span className="truncate text-xs">{leg.from}</span>
+                </span>
+              ) : (
+                <span className="flex items-center gap-1.5 text-slate-500">
+                  <MapPin className="w-3.5 h-3.5 text-orange-400/60" />
+                  Tap to pin pickup…
+                </span>
+              )}
+            </button>
           ) : (
-            // Station dropdown for public modes
             <select
               value={leg.from}
               onChange={e => onUpdate({ ...leg, from: e.target.value })}
@@ -215,11 +212,6 @@ function LegBuilder({ leg, index, stations, onUpdate, onRemove, canRemove }) {
               {stations.map(s => <option key={s} value={s}>{s}</option>)}
             </select>
           )}
-          {isPrivate && (
-            <datalist id={`from-suggestions-${index}`}>
-              {PRIVATE_ADDRESS_SUGGESTIONS.map(s => <option key={s} value={s} />)}
-            </datalist>
-          )}
         </div>
 
         <div>
@@ -227,14 +219,27 @@ function LegBuilder({ leg, index, stations, onUpdate, onRemove, canRemove }) {
             {isPrivate ? 'Drop Location' : 'To Station'}
           </label>
           {isPrivate ? (
-            <input
-              type="text"
-              list={`to-suggestions-${index}`}
-              value={leg.to}
-              onChange={e => onUpdate({ ...leg, to: e.target.value })}
-              placeholder="e.g. Andheri Station..."
-              className="w-full bg-slate-900/60 border border-orange-500/20 rounded-xl text-white px-3 py-2.5 text-sm focus:outline-none focus:border-orange-500/50 placeholder:text-slate-600"
-            />
+            <button
+              onClick={() => onPinDrop(index, 'to')}
+              className={cn(
+                'w-full text-left px-3 py-2.5 rounded-xl border text-sm transition-all',
+                leg.to
+                  ? 'border-cyan-500/40 bg-cyan-500/5 text-white'
+                  : 'border-orange-500/20 bg-slate-900/60 text-slate-500 hover:border-orange-500/40'
+              )}
+            >
+              {leg.to ? (
+                <span className="flex items-center gap-1.5">
+                  <MapPin className="w-3.5 h-3.5 text-cyan-400 shrink-0" />
+                  <span className="truncate text-xs">{leg.to}</span>
+                </span>
+              ) : (
+                <span className="flex items-center gap-1.5 text-slate-500">
+                  <MapPin className="w-3.5 h-3.5 text-orange-400/60" />
+                  Tap to pin drop…
+                </span>
+              )}
+            </button>
           ) : (
             <select
               value={leg.to}
@@ -245,15 +250,10 @@ function LegBuilder({ leg, index, stations, onUpdate, onRemove, canRemove }) {
               {stations.map(s => s !== leg.from && <option key={s} value={s}>{s}</option>)}
             </select>
           )}
-          {isPrivate && (
-            <datalist id={`to-suggestions-${index}`}>
-              {PRIVATE_ADDRESS_SUGGESTIONS.map(s => <option key={s} value={s} />)}
-            </datalist>
-          )}
         </div>
       </div>
 
-      {/* Private leg: estimated fare + 25km cap warning */}
+      {/* Private leg: estimated fare + cap warning */}
       {isPrivate && leg.from && leg.to && (
         <div className="mt-3 rounded-lg border border-orange-500/20 bg-orange-500/5 px-3 py-2">
           <div className="flex items-center justify-between">
@@ -270,7 +270,7 @@ function LegBuilder({ leg, index, stations, onUpdate, onRemove, canRemove }) {
         </div>
       )}
 
-      {/* Connector arrow pointing to next leg */}
+      {/* Connector arrow */}
       {index >= 0 && (
         <div className="absolute -bottom-4 left-1/2 -translate-x-1/2 z-10">
           <div className="w-8 h-8 rounded-full bg-slate-900 border border-white/10 flex items-center justify-center">
@@ -314,14 +314,12 @@ function JourneySummary({ legs }) {
 
 export default function BookTrip() {
   const [step, setStep] = useState(0)
-  // Step 0: Build legs
-  // Step 1: Passenger selection + fare summary
-  // Step 2: Confirm + book
-  // Step 3: Ticket / QR
 
   const [legs, setLegs] = useState([
     { id: uuidv4(), mode: 'Local Train (Western)', from: '', to: '', status: 'confirmed', estimatedFare: 0 }
   ])
+
+  const [pinModal, setPinModal] = useState(null) // null | { legIndex, field: 'from'|'to' }
 
   const [passengerData, setPassengerData] = useState({
     adults: 1, children: 0, childrenWithSeats: 0, totalPassengers: 1
@@ -363,12 +361,11 @@ export default function BookTrip() {
   }
 
   function updateLeg(index, updatedLeg) {
-    // Recalculate estimated fare for private legs
     if (isPrivateMode(updatedLeg.mode)) {
       updatedLeg.estimatedFare = estimatePrivateFare(updatedLeg.mode)
       updatedLeg.status = 'pending'
     } else {
-      updatedLeg.estimatedFare = 0  // will be filled by route API
+      updatedLeg.estimatedFare = 0
       updatedLeg.status = 'confirmed'
     }
     setLegs(prev => prev.map((leg, i) => i === index ? updatedLeg : leg))
@@ -376,6 +373,18 @@ export default function BookTrip() {
 
   function removeLeg(index) {
     setLegs(prev => prev.filter((_, i) => i !== index))
+  }
+
+  // ── Pin Drop Handler ─────────────────────────────────────────────────────────
+
+  function handlePinConfirm({ lat, lng, label }) {
+    const { legIndex, field } = pinModal
+    setPinModal(null)
+    setLegs(prev => prev.map((leg, i) => {
+      if (i !== legIndex) return leg
+      const coordKey = field === 'from' ? 'fromCoords' : 'toCoords'
+      return { ...leg, [field]: label, [coordKey]: [lat, lng] }
+    }))
   }
 
   // ── Validation ──────────────────────────────────────────────────────────────
@@ -393,7 +402,6 @@ export default function BookTrip() {
 
   // ── Fare Calculation ────────────────────────────────────────────────────────
 
-  // For public legs, fetch fare from backend. For private legs, use estimate.
   async function fetchPublicFares() {
     const updatedLegs = [...legs]
     for (let i = 0; i < updatedLegs.length; i++) {
@@ -403,14 +411,12 @@ export default function BookTrip() {
           const res = await api.get('/routes', {
             params: { from_station: leg.from, to_station: leg.to }
           })
-          // Grab cheapest route fare
           const routes = res.data?.routes || res.data || []
           if (routes.length > 0) {
             const minFare = Math.min(...routes.map(r => r.total_fare || r.fare || r.totalFare || 0))
             updatedLegs[i] = { ...leg, estimatedFare: minFare }
           }
         } catch {
-          // Fallback to a rough distance-based estimate
           updatedLegs[i] = { ...leg, estimatedFare: 20 }
         }
       }
@@ -422,7 +428,6 @@ export default function BookTrip() {
   function getTotalFare(legsData = legs) {
     const adultCount = passengerData.adults
     const childSeatCount = passengerData.childrenWithSeats
-
     return legsData.reduce((total, leg) => {
       const base = leg.estimatedFare || 0
       return total + (base * adultCount) + (base * 0.5 * childSeatCount)
@@ -451,7 +456,6 @@ export default function BookTrip() {
     const valid_until = new Date(now.getTime() + 3 * 60 * 60 * 1000)
     const ticket_id = uuidv4()
 
-    // Build primary from/to from first and last leg
     const firstLeg = legs[0]
     const lastLeg = legs[legs.length - 1]
 
@@ -470,12 +474,10 @@ export default function BookTrip() {
       has_private_leg: hasPrivateLeg(legs)
     }
 
-    // Build QR payload using new multi-leg minifier
     const qrPayload = minifyMultiLegPayload(newTicket)
     newTicket.qr_payload = qrPayload
 
     try {
-      // Send to backend (only public legs are booked server-side for now)
       const publicLegs = legs.filter(l => !isPrivateMode(l.mode))
       if (publicLegs.length > 0) {
         await bookTicket({
@@ -484,12 +486,12 @@ export default function BookTrip() {
           to_station: lastLeg.to,
           mode: firstLeg.mode,
           ticket_id,
-          passengers: passengerData
+          passengers: passengerData,
+          legs: legs
         })
       }
 
-      // Deduct balance after successful API call
-      const { ok, reason } = deductBalance(totalFare) // from walletstore
+      const { ok, reason } = deductBalance(totalFare)
       if (!ok) {
         setBalanceError(reason)
         setLoading(false)
@@ -501,7 +503,6 @@ export default function BookTrip() {
       setStep(2)
 
     } catch (err) {
-      // Offline fallback
       const { ok, reason } = deductBalance(totalFare)
       if (!ok) {
         setBalanceError(reason)
@@ -535,7 +536,7 @@ export default function BookTrip() {
             Plan Your Journey
           </h1>
           <p className="text-slate-400 text-sm">
-            Multi-modal transit · Add public + gig legs
+            Multi-modal transit
           </p>
         </div>
 
@@ -544,7 +545,7 @@ export default function BookTrip() {
           <div className="bg-slate-900/80 border border-white/10 rounded-2xl p-6 backdrop-blur-md shadow-2xl">
             <h2 className="text-xl font-bold text-white mb-2">Build Your Route</h2>
             <p className="text-slate-500 text-sm mb-5">
-              Add one connection at a time. Mix public transit and gig rides.
+              Add one connection at a time.
             </p>
 
             {stationsError && (
@@ -561,7 +562,6 @@ export default function BookTrip() {
               </div>
             )}
 
-            {/* Name input */}
             <div className="mb-5">
               <label className="text-[10px] text-slate-500 tracking-widest uppercase font-semibold block mb-2">
                 Your Name
@@ -574,7 +574,6 @@ export default function BookTrip() {
               />
             </div>
 
-            {/* Leg builders */}
             <div className="relative pb-4">
               {legs.map((leg, index) => (
                 <LegBuilder
@@ -585,11 +584,11 @@ export default function BookTrip() {
                   onUpdate={updated => updateLeg(index, updated)}
                   onRemove={() => removeLeg(index)}
                   canRemove={legs.length > 1}
+                  onPinDrop={(legIndex, field) => setPinModal({ legIndex, field })}
                 />
               ))}
             </div>
 
-            {/* Add Connection Button */}
             <button
               onClick={addLeg}
               className="w-full flex items-center justify-center gap-2 border border-dashed border-cyan-500/30 text-cyan-400 hover:border-cyan-500/60 hover:bg-cyan-500/5 text-sm font-semibold py-3 rounded-xl transition-colors mb-5"
@@ -598,7 +597,6 @@ export default function BookTrip() {
               + Add Connection
             </button>
 
-            {/* Proceed CTA */}
             <button
               onClick={handleProceedToPassengers}
               disabled={loading}
@@ -626,10 +624,8 @@ export default function BookTrip() {
 
             <h2 className="text-xl font-bold text-white mb-4">Passengers & Fare</h2>
 
-            {/* Journey summary */}
             <JourneySummary legs={legs} />
 
-            {/* Individual leg fare breakdown */}
             <div className="rounded-xl border border-white/8 bg-slate-900/40 p-4 mb-5">
               <p className="text-[9px] text-slate-500 tracking-widest uppercase mb-2">Leg Breakdown</p>
               {legs.map((leg, idx) => (
@@ -652,10 +648,8 @@ export default function BookTrip() {
               ))}
             </div>
 
-            {/* Group ticketing component */}
             <GroupTicketing onUpdate={setPassengerData} />
 
-            {/* Balance error */}
             {balanceError && (
               <div className="flex flex-col gap-2 bg-rose-500/10 border border-rose-500/30 text-rose-400 text-sm rounded-xl px-4 py-3 mb-4">
                 <div className="flex items-center gap-2">
@@ -671,7 +665,6 @@ export default function BookTrip() {
               </div>
             )}
 
-            {/* Total fare display */}
             <div className="rounded-xl border border-white/10 bg-slate-800/60 p-4 mb-5">
               <div className="flex justify-between items-center">
                 <div>
@@ -684,7 +677,6 @@ export default function BookTrip() {
                   ₹{getTotalFare().toFixed(2)}
                 </span>
               </div>
-             
             </div>
 
             <button
@@ -699,7 +691,7 @@ export default function BookTrip() {
             >
               {loading
                 ? <><RefreshCw className="w-4 h-4 animate-spin" /> Processing...</>
-                : 'Confirm & Book All Legs'
+                : 'Confirm & Book'
               }
             </button>
           </div>
@@ -714,7 +706,6 @@ export default function BookTrip() {
               onBookAnother={handleReset}
             />
 
-            {/* Multi-leg status list */}
             {ticket.is_multileg && (
               <div className="mt-5 rounded-xl border border-white/8 bg-slate-900/40 p-4">
                 <p className="text-[9px] text-slate-500 tracking-widest uppercase mb-3">Leg Status</p>
@@ -744,6 +735,24 @@ export default function BookTrip() {
         )}
 
       </div>
+
+      {/* ── Pin Drop Modal ── */}
+      {pinModal && (
+        <PinDropMap
+          label={pinModal.field === 'from' ? 'Pickup Location' : 'Drop Location'}
+          initialPos={
+            pinModal.field === 'from'
+              ? legs[pinModal.legIndex]?.fromCoords
+                ? { lat: legs[pinModal.legIndex].fromCoords[0], lng: legs[pinModal.legIndex].fromCoords[1] }
+                : null
+              : legs[pinModal.legIndex]?.toCoords
+                ? { lat: legs[pinModal.legIndex].toCoords[0], lng: legs[pinModal.legIndex].toCoords[1] }
+                : null
+          }
+          onConfirm={handlePinConfirm}
+          onClose={() => setPinModal(null)}
+        />
+      )}
     </div>
   )
 }

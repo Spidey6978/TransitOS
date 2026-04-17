@@ -34,7 +34,16 @@ export const bookTicket = async (ticketData) => {
       mode: ticketData.mode,
       ticket_id: ticketData.ticket_id,
       passengers: ticketData.passengers,
-      legs: ticketData.legs  // NEW: multi-leg data for escrow/driver settlement
+      legs: ticketData.legs?.map(leg => ({
+        mode: leg.mode,
+        from: leg.from,
+        to: leg.to,
+        status: leg.status,
+        estimatedFare: leg.estimatedFare,
+        // Raw lat/lng for private legs — OSRM uses these directly
+        from_coords: leg.fromCoords || null,   // [lat, lng]
+        to_coords: leg.toCoords || null,       // [lat, lng]
+      }))
     })
     return response.data
   } catch (error) {
@@ -42,6 +51,7 @@ export const bookTicket = async (ticketData) => {
     throw error
   }
 }
+
 export const validateTicketById = async (ticket_id) => {
   try {
     const response = await api.post('/validate_ticket', { ticket_id });
@@ -51,4 +61,5 @@ export const validateTicketById = async (ticket_id) => {
     throw error;
   }
 };
+
 export default api;
