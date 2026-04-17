@@ -224,8 +224,8 @@ def reset_database():
 def rate_limit_handler(request, exc):
     return JSONResponse(status_code=429, content={"error": "Too many requests"})
 
-@app.post("/book_ticket", response_model=TicketResponse)
 @limiter.limit("30/minute")
+@app.post("/book_ticket", response_model=TicketResponse)
 def book_ticket(request: Request, ticket: TicketRequest):
     if ticket.from_station not in MUMBAI_LOCATIONS or ticket.to_station not in MUMBAI_LOCATIONS:
         raise HTTPException(status_code=400, detail="Invalid route.")
