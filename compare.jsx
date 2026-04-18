@@ -416,7 +416,7 @@ export default function WalletPage() {
 
         <div className="px-5 mt-6 pb-8">
           <div className="flex items-center justify-between mb-3">
-            <h2 className="text-white font-bold text-base">Transaction History</h2>
+            <h2 className="text-white font-bold text-base">Booking History</h2>
             <span className="text-[10px] text-slate-500 tracking-widest">
               {tickets.length} transaction{tickets.length !== 1 ? 's' : ''}
             </span>

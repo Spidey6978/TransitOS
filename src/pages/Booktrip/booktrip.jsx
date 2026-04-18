@@ -1,5 +1,5 @@
 // src/pages/Booktrip/booktrip.jsx
-// V4: Private leg backend integration + coord-aware fare estimation
+// V5: Fixed fare calculation for public and private legs
 
 import { useState, useEffect } from 'react'
 import {
@@ -57,6 +57,12 @@ const PRIVATE_FARE_PER_KM = {
   'Bike Taxi': 12
 }
 
+const PRIVATE_BASE_FARE = {
+  'Auto-Rickshaw': 26,
+  'Taxi': 28,
+  'Bike Taxi': 10
+}
+
 const PRIVATE_LEG_MAX_KM = 25
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -85,7 +91,7 @@ function getModeColor(mode = '') {
 
 // Haversine formula — gives real km between two [lat, lng] pairs
 function haversineKm(coordA, coordB) {
-  if (!coordA || !coordB) return 3 // fallback default
+  if (!coordA || !coordB) return null // Return null instead of fake fallback
   const [lat1, lon1] = coordA
   const [lat2, lon2] = coordB
   const R = 6371
@@ -98,10 +104,29 @@ function haversineKm(coordA, coordB) {
   return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a))
 }
 
+// Uses official Mumbai base fare + per-km rate, matching backend logic exactly
 function estimatePrivateFare(mode, fromCoords = null, toCoords = null) {
-  const rate = PRIVATE_FARE_PER_KM[mode] || 18
-  const distanceKm = Math.min(haversineKm(fromCoords, toCoords), PRIVATE_LEG_MAX_KM)
-  return Math.round(rate * distanceKm)
+  // If either coord is missing, we cannot estimate yet
+  if (!fromCoords || !toCoords) return 0
+
+  const distanceKm = haversineKm(fromCoords, toCoords)
+  if (distanceKm === null) return 0
+
+  const cappedKm = Math.min(distanceKm * 1.3, PRIVATE_LEG_MAX_KM) // 1.3x routing multiplier like backend
+  const base = PRIVATE_BASE_FARE[mode] || 26
+  const perKm = PRIVATE_FARE_PER_KM[mode] || 18
+
+  if (cappedKm <= 1.5) return Math.round(base)
+  return Math.round(base + ((cappedKm - 1.5) * perKm))
+}
+
+// Map backend mode strings to frontend UI mode strings for matching
+function getTargetModeString(uiMode = '') {
+  const m = uiMode.toLowerCase()
+  if (m.includes('metro')) return 'metro'
+  if (m.includes('bus')) return 'bus'
+  if (m.includes('local') || m.includes('train')) return 'train'
+  return 'train'
 }
 
 // ─── Single Leg Builder Component ─────────────────────────────────────────────
@@ -109,6 +134,8 @@ function estimatePrivateFare(mode, fromCoords = null, toCoords = null) {
 function LegBuilder({ leg, index, stations, onUpdate, onRemove, canRemove, onPinDrop }) {
   const isPrivate = isPrivateMode(leg.mode)
   const modeColor = getModeColor(leg.mode)
+  const bothCoordsSet = leg.fromCoords && leg.toCoords
+  const estimatedKm = bothCoordsSet ? haversineKm(leg.fromCoords, leg.toCoords) : null
 
   return (
     <div className={cn(
@@ -154,7 +181,7 @@ function LegBuilder({ leg, index, stations, onUpdate, onRemove, canRemove, onPin
               {PUBLIC_MODES.map(m => (
                 <button
                   key={m}
-                  onClick={() => onUpdate({ ...leg, mode: m, from: '', to: '' })}
+                  onClick={() => onUpdate({ ...leg, mode: m, from: '', to: '', estimatedFare: 0 })}
                   className={cn(
                     'text-[10px] px-2.5 py-1 rounded-lg border transition-all',
                     leg.mode === m
@@ -181,6 +208,7 @@ function LegBuilder({ leg, index, stations, onUpdate, onRemove, canRemove, onPin
                     to: '',
                     fromCoords: null,
                     toCoords: null,
+                    estimatedFare: 0,
                     status: 'pending'
                   })}
                   className={cn(
@@ -277,22 +305,31 @@ function LegBuilder({ leg, index, stations, onUpdate, onRemove, canRemove, onPin
         </div>
       </div>
 
-      {/* Private leg: estimated fare — now uses real coords */}
-      {isPrivate && leg.from && leg.to && (
+      {/* Private leg: estimated fare — only shown when BOTH pins are set */}
+      {isPrivate && leg.from && leg.to && bothCoordsSet && (
         <div className="mt-3 rounded-lg border border-orange-500/20 bg-orange-500/5 px-3 py-2">
           <div className="flex items-center justify-between">
             <span className="text-[10px] text-orange-300/70 tracking-widest uppercase">
               Est. Fare (locked upfront)
             </span>
             <span className="text-sm font-bold text-orange-400">
-              ₹{estimatePrivateFare(leg.mode, leg.fromCoords, leg.toCoords)}
+              ₹{leg.estimatedFare > 0 ? leg.estimatedFare : '—'}
             </span>
           </div>
           <p className="text-[10px] text-slate-600 mt-1">
-            {leg.fromCoords && leg.toCoords
-              ? `~${haversineKm(leg.fromCoords, leg.toCoords).toFixed(1)} km · Max ${PRIVATE_LEG_MAX_KM}km cap enforced`
+            {estimatedKm !== null
+              ? `~${(estimatedKm * 1.3).toFixed(1)} km (route est.) · Max ${PRIVATE_LEG_MAX_KM}km cap enforced`
               : `Estimated distance · Max ${PRIVATE_LEG_MAX_KM}km cap enforced`
             }
+          </p>
+        </div>
+      )}
+
+      {/* Waiting for second pin */}
+      {isPrivate && (leg.from || leg.to) && !bothCoordsSet && (
+        <div className="mt-3 rounded-lg border border-slate-700/50 bg-slate-800/30 px-3 py-2">
+          <p className="text-[10px] text-slate-500">
+            📍 Pin both pickup and drop to see fare estimate
           </p>
         </div>
       )}
@@ -388,12 +425,16 @@ export default function BookTrip() {
 
   function updateLeg(index, updatedLeg) {
     if (isPrivateMode(updatedLeg.mode)) {
-      // Recalculate fare using coords if both are set
-      updatedLeg.estimatedFare = estimatePrivateFare(
-        updatedLeg.mode,
-        updatedLeg.fromCoords,
-        updatedLeg.toCoords
-      )
+      // Only recalculate if BOTH coords are present
+      if (updatedLeg.fromCoords && updatedLeg.toCoords) {
+        updatedLeg.estimatedFare = estimatePrivateFare(
+          updatedLeg.mode,
+          updatedLeg.fromCoords,
+          updatedLeg.toCoords
+        )
+      } else {
+        updatedLeg.estimatedFare = 0
+      }
       updatedLeg.status = 'pending'
     } else {
       updatedLeg.estimatedFare = 0
@@ -414,17 +455,22 @@ export default function BookTrip() {
 
     setLegs(prev => prev.map((leg, i) => {
       if (i !== legIndex) return leg
+
       const coordKey = field === 'from' ? 'fromCoords' : 'toCoords'
       const updated = { ...leg, [field]: label, [coordKey]: [lat, lng] }
 
-      // Recalculate fare now that we have fresh coords
-      if (isPrivateMode(updated.mode)) {
+      // Recalculate fare only when BOTH coords are now available
+      if (isPrivateMode(updated.mode) && updated.fromCoords && updated.toCoords) {
         updated.estimatedFare = estimatePrivateFare(
           updated.mode,
           updated.fromCoords,
           updated.toCoords
         )
+      } else {
+        // One coord still missing — don't show a partial/wrong fare
+        updated.estimatedFare = 0
       }
+
       return updated
     }))
   }
@@ -448,25 +494,45 @@ export default function BookTrip() {
   // ── Fare Calculation ────────────────────────────────────────────────────────
 
   async function fetchPublicFares() {
-    const updatedLegs = [...legs]
+    // Take a snapshot of current legs — avoids stale closure issues
+    const snapshot = legs.map(leg => ({ ...leg }))
+    const updatedLegs = snapshot.map(leg => ({ ...leg }))
+
     for (let i = 0; i < updatedLegs.length; i++) {
       const leg = updatedLegs[i]
-      if (!isPrivateMode(leg.mode)) {
-        try {
-          const res = await api.get('/routes', {
-            params: { from_station: leg.from, to_station: leg.to }
-          })
-          const routes = res.data?.routes || res.data || []
-          if (routes.length > 0) {
-            const minFare = Math.min(...routes.map(r => r.total_fare || r.fare || r.totalFare || 0))
-            updatedLegs[i] = { ...leg, estimatedFare: minFare }
-          }
-        } catch {
+
+      // ✅ CRITICAL: Skip private legs entirely — preserve their coord-based fare
+      if (isPrivateMode(leg.mode)) continue
+
+      try {
+        const res = await api.get('/routes', {
+          params: { from_station: leg.from, to_station: leg.to }
+        })
+
+        const routes = res.data?.routes || res.data || []
+
+        if (routes.length > 0) {
+          const targetMode = getTargetModeString(leg.mode)
+
+          // Match backend mode string with contains-check (more resilient than ===)
+          const matchingRoutes = routes.filter(r =>
+            (r.mode || '').toLowerCase().includes(targetMode)
+          )
+
+          const fareSource = matchingRoutes.length > 0 ? matchingRoutes : routes
+          const correctFare = Math.min(
+            ...fareSource.map(r => r.total_fare ?? r.fare ?? r.totalFare ?? 20)
+          )
+
+          updatedLegs[i] = { ...leg, estimatedFare: correctFare }
+        } else {
           updatedLegs[i] = { ...leg, estimatedFare: 20 }
         }
+      } catch {
+        updatedLegs[i] = { ...leg, estimatedFare: 20 }
       }
-      // Private legs: fare already computed from coords in updateLeg/handlePinConfirm
     }
+
     setLegs(updatedLegs)
     return updatedLegs
   }
@@ -480,14 +546,12 @@ export default function BookTrip() {
     }, 0)
   }
 
-  // ── Step Navigation ─────────────────────────────────────────────────────────
-
   async function handleProceedToPassengers() {
     const validationError = validateLegs()
     if (validationError) { setError(validationError); return }
     setError('')
     setLoading(true)
-    await fetchPublicFares()
+    const updatedLegs = await fetchPublicFares()
     setLoading(false)
     setStep(1)
   }
@@ -505,19 +569,18 @@ export default function BookTrip() {
     const firstLeg = legs[0]
     const lastLeg = legs[legs.length - 1]
 
-    // ✅ FIX: Create ticket with ALL legs data, not just first/last
     const newTicket = {
       ticket_id,
       commuter_name: name,
       from_station: firstLeg.from,
       to_station: lastLeg.to,
-      mode: firstLeg.mode,  // Keep for single-leg compatibility
+      mode: firstLeg.mode,
       fare: totalFare,
       issued_at: now.toISOString(),
       valid_until: valid_until.toISOString(),
       passengers: passengerData,
-      legs: legs,  // ✅ IMPORTANT: Store ALL legs here
-      is_multileg: legs.length > 1,  // ✅ Flag for multi-leg
+      legs: legs,
+      is_multileg: legs.length > 1,
       has_private_leg: hasPrivateLeg(legs)
     }
 
@@ -525,52 +588,28 @@ export default function BookTrip() {
     newTicket.qr_payload = qrPayload
 
     try {
-      // ── Send ALL legs to backend, separated by type ──────────────────────
+      const backendLegs = legs.map(l => ({
+        ...l,
+        from: l.fromCoords ? `${l.fromCoords[0]},${l.fromCoords[1]}` : l.from,
+        to: l.toCoords ? `${l.toCoords[0]},${l.toCoords[1]}` : l.to
+      }))
 
-      const publicLegs = legs.filter(l => !isPrivateMode(l.mode))
-      const privateLegs = legs.filter(l => isPrivateMode(l.mode))
+      const startPoint = firstLeg.fromCoords
+        ? `${firstLeg.fromCoords[0]},${firstLeg.fromCoords[1]}`
+        : firstLeg.from
+      const endPoint = lastLeg.toCoords
+        ? `${lastLeg.toCoords[0]},${lastLeg.toCoords[1]}`
+        : lastLeg.to
 
-      // Public legs — existing booking flow
-      if (publicLegs.length > 0) {
-        await bookTicket({
-          commuter_name: name,
-          from_station: firstLeg.from,
-          to_station: lastLeg.to,
-          mode: firstLeg.mode,
-          ticket_id,
-          passengers: passengerData,
-          legs: publicLegs
-        })
-      }
-
-      // Private legs — sent separately with full coord payload
-      // Backend receives these as "pre-registered" rides awaiting driver scan
-      if (privateLegs.length > 0) {
-        await api.post('/book_private_legs', {
-          ticket_id,
-          commuter_name: name,
-          passengers: passengerData,
-          legs: privateLegs.map(leg => ({
-            leg_id: leg.id,
-            mode: leg.mode,
-            pickup_label: leg.from,
-            drop_label: leg.to,
-            pickup_coords: leg.fromCoords
-              ? { lat: leg.fromCoords[0], lng: leg.fromCoords[1] }
-              : null,
-            drop_coords: leg.toCoords
-              ? { lat: leg.toCoords[0], lng: leg.toCoords[1] }
-              : null,
-            estimated_fare: leg.estimatedFare,
-            estimated_distance_km: leg.fromCoords && leg.toCoords
-              ? parseFloat(haversineKm(leg.fromCoords, leg.toCoords).toFixed(2))
-              : null,
-            status: 'pending'
-          }))
-        })
-      }
-
-      // ── Deduct balance ───────────────────────────────────────────────────
+      await bookTicket({
+        commuter_name: name,
+        from_station: startPoint,
+        to_station: endPoint,
+        mode: firstLeg.mode,
+        ticket_id,
+        passengers: passengerData,
+        legs: backendLegs
+      })
 
       const { ok, reason } = deductBalance(totalFare)
       if (!ok) {
@@ -584,20 +623,8 @@ export default function BookTrip() {
       setStep(2)
 
     } catch (err) {
-      // If public booking failed but private-only journey — still try to complete
-      const isPrivateOnly = legs.every(l => isPrivateMode(l.mode))
-      if (isPrivateOnly) {
-        const { ok, reason } = deductBalance(totalFare)
-        if (!ok) {
-          setBalanceError(reason)
-        } else {
-          saveTicket(newTicket)
-          setTicket(newTicket)
-          setStep(2)
-        }
-      } else {
-        setError('Booking failed. Please try again.')
-      }
+      console.error("Backend Escrow Failed:", err)
+      setError("Failed to lock smart contract escrow. Please try again.")
     } finally {
       setLoading(false)
     }
@@ -612,8 +639,6 @@ export default function BookTrip() {
     setPassengerData({ adults: 1, children: 0, childrenWithSeats: 0, totalPassengers: 1 })
   }
 
-  // ── Render ──────────────────────────────────────────────────────────────────
-
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 p-6 pb-20">
       <div className="max-w-2xl mx-auto">
@@ -627,12 +652,11 @@ export default function BookTrip() {
           </p>
         </div>
 
-        {/* ── STEP 0: Leg Builder ── */}
         {step === 0 && (
           <div className="bg-slate-900/80 border border-white/10 rounded-2xl p-6 backdrop-blur-md shadow-2xl">
             <h2 className="text-xl font-bold text-white mb-2">Build Your Route</h2>
             <p className="text-slate-500 text-sm mb-5">
-              Add one connection at a time.
+              Add one connection at a time. Mix public transit and gig rides.
             </p>
 
             {stationsError && (
@@ -702,7 +726,6 @@ export default function BookTrip() {
           </div>
         )}
 
-        {/* ── STEP 1: Passengers + Fare Review ── */}
         {step === 1 && (
           <div className="bg-slate-900/80 border border-white/10 rounded-2xl p-6 backdrop-blur-md shadow-2xl">
             <button onClick={() => setStep(0)} className="flex items-center gap-1 text-slate-400 mb-5 text-sm">
@@ -729,7 +752,7 @@ export default function BookTrip() {
                     )}
                   </div>
                   <span className="text-xs text-cyan-400 font-semibold">
-                    ₹{leg.estimatedFare?.toFixed(2) || '—'}
+                    ₹{leg.estimatedFare > 0 ? leg.estimatedFare.toFixed(2) : '—'}
                   </span>
                 </div>
               ))}
@@ -778,13 +801,12 @@ export default function BookTrip() {
             >
               {loading
                 ? <><RefreshCw className="w-4 h-4 animate-spin" /> Processing...</>
-                : 'Confirm & Book'
+                : 'Confirm & Book All Legs'
               }
             </button>
           </div>
         )}
 
-        {/* ── STEP 2: Ticket / QR ── */}
         {step === 2 && ticket && (
           <div className="bg-slate-900/80 border border-white/10 rounded-2xl p-6 backdrop-blur-md shadow-2xl">
             <QRGeneratorGrouped
@@ -823,7 +845,6 @@ export default function BookTrip() {
 
       </div>
 
-      {/* ── Pin Drop Modal ── */}
       {pinModal && (
         <PinDropMap
           label={pinModal.field === 'from' ? 'Pickup Location' : 'Drop Location'}

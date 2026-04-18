@@ -1,6 +1,102 @@
 import { useState } from 'react'
 import { NavLink, useNavigate } from 'react-router-dom'
 import {
+  LayoutDashboard, MapPin, Wallet, LogOut, ScanLine,
+  PanelLeftClose, PanelLeftOpen, CarFront, Navigation
+} from 'lucide-react'
+import { cn } from '@/lib/utils'
+import { Button } from '@/components/ui/button'
+
+const NAV_ITEMS = [
+  // Admin only
+  { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard, roles: ['admin'] },
+  
+  // User only
+  { href: '/book', label: 'Book Trip', icon: MapPin, roles: ['user'] },
+  { href: '/wallets', label: 'Wallets', icon: Wallet, roles: ['user'] },
+  
+  // Conductor only
+  { href: '/validate', label: 'Validator', icon: ScanLine, roles: ['conductor'] },
+  
+  // Driver only
+  { href: '/driver/active', label: 'Active Trip', icon: Navigation, roles: ['driver'] },
+  { href: '/driver/wallet', label: 'Wallet', icon: Wallet, roles: ['driver'] },
+  { href: '/validate', label: 'Validator', icon: ScanLine, roles: ['driver'] },
+]
+
+export default function Sidebar() {
+  const [collapsed, setCollapsed] = useState(false)
+  const navigate = useNavigate()
+  const role = localStorage.getItem('transitos_role')
+  
+  // Filter items based on user role
+  const visibleItems = NAV_ITEMS.filter(item => item.roles.includes(role))
+
+  function handleLogout() {
+    localStorage.removeItem('transitos_role')
+    navigate('/')
+  }
+
+  return (
+    <div className="relative flex shrink-0">
+      <button
+        onClick={() => setCollapsed(!collapsed)}
+        className={cn(
+          "absolute -right-4 top-16 z-50 w-8 h-8 rounded-lg flex items-center justify-center",
+          "bg-slate-900 border border-white/10 text-slate-400 hover:text-cyan-400 shadow-md"
+        )}
+      >
+        {collapsed ? <PanelLeftOpen className="w-4 h-4" /> : <PanelLeftClose className="w-4 h-4" />}
+      </button>
+
+      <aside className={cn(
+        "relative h-screen flex flex-col bg-slate-900/40 backdrop-blur-md border-r border-white/10 transition-all duration-300",
+        collapsed ? "w-16" : "w-64"
+      )}>
+        <div className={cn("flex items-center border-b border-white/10 px-5 py-5 gap-3", collapsed && "justify-center px-0")}>
+          <div className="w-10 h-10 rounded-xl bg-cyan-500/20 border border-cyan-500/40 flex items-center justify-center shrink-0">
+            <CarFront className="w-6 h-6 text-cyan-400" />
+          </div>
+          {!collapsed && (
+            <div>
+              <h1 className="text-sm font-bold text-cyan-400 tracking-widest uppercase">TransitOS</h1>
+              <p className="text-[10px] text-slate-500 tracking-widest uppercase">{role} Portal</p>
+            </div>
+          )}
+        </div>
+
+        <nav className="flex-1 px-2 py-4 space-y-1">
+          {visibleItems.map((item, idx) => {
+            const Icon = item.icon
+            return (
+              <NavLink key={`${item.href}-${idx}`} to={item.href}>
+                {({ isActive }) => (
+                  <div className={cn(
+                    "flex items-center rounded-lg text-sm font-medium transition-all duration-150 border px-3 py-2.5",
+                    collapsed && "justify-center px-0",
+                    isActive ? "bg-cyan-500/15 text-cyan-400 border-cyan-500/40" : "text-slate-400 border-transparent hover:bg-white/5"
+                  )}>
+                    <Icon className="w-5 h-5 shrink-0" />
+                    {!collapsed && <span className="ml-3 tracking-wide">{item.label}</span>}
+                  </div>
+                )}
+              </NavLink>
+            )
+          })}
+        </nav>
+
+        <div className="p-4 border-t border-white/10">
+          <Button variant="ghost" onClick={handleLogout} className={cn("w-full justify-start gap-3 text-slate-500 hover:text-red-400", collapsed && "justify-center px-0")}>
+            <LogOut className="w-4 h-4" />
+            {!collapsed && "Sign Out"}
+          </Button>
+        </div>
+      </aside>
+    </div>
+  )
+}import { useState } from 'react'
+import { NavLink, useNavigate } from 'react-router-dom'
+import {
   LayoutDashboard, MapPin, Wallet, QrCode, Map, LogOut, ScanLine,
   PanelLeftClose, PanelLeftOpen
 } from 'lucide-react'

@@ -11,17 +11,17 @@ import { QRCode } from 'react-qr-code'
 
 function getModeIcon(mode = '') {
   const m = mode.toLowerCase()
-  if (m.includes('metro') || m.includes('monorail')) return <Zap    className="w-3.5 h-3.5" />
-  if (m.includes('bus')   || m.includes('uber'))     return <Bus    className="w-3.5 h-3.5" />
-  if (m.includes('ferry'))                            return <Anchor className="w-3.5 h-3.5" />
+  if (m.includes('metro') || m.includes('monorail')) return <Zap className="w-3.5 h-3.5" />
+  if (m.includes('bus') || m.includes('uber')) return <Bus className="w-3.5 h-3.5" />
+  if (m.includes('ferry')) return <Anchor className="w-3.5 h-3.5" />
   return <Train className="w-3.5 h-3.5" />
 }
 
 function getModeLabel(mode = '') {
   const m = mode.toLowerCase()
   if (m.includes('metro') || m.includes('monorail')) return 'METRO'
-  if (m.includes('bus')   || m.includes('uber'))     return 'BUS'
-  if (m.includes('ferry'))                            return 'FERRY'
+  if (m.includes('bus') || m.includes('uber')) return 'BUS'
+  if (m.includes('ferry')) return 'FERRY'
   return 'RAIL'
 }
 
@@ -53,17 +53,180 @@ function loadTickets() {
   catch { return [] }
 }
 
+// ─── REFUND MODAL ─────────────────────────────────────────────────────────────
+
+function RefundModal({ ticket, onClose, onConfirm }) {
+  const [loading, setLoading] = useState(false)
+  const [success, setSuccess] = useState(false)
+  const [reason, setReason] = useState('user')
+  const [error, setError] = useState(null)
+
+  const grossFare = Number(ticket.fare || 0)
+  const refundAmount = reason === 'user' ? Math.max(0, grossFare - 0.5) : grossFare
+  const fee = reason === 'user' ? 0.5 : 0
+
+  async function handleRefund() {
+    setLoading(true)
+    setError(null)
+
+    try {
+      await new Promise(resolve => setTimeout(resolve, 800))
+
+      setSuccess(true)
+
+      setTimeout(() => {
+        onConfirm(refundAmount)
+        onClose()
+      }, 1200)
+    } catch (err) {
+      setError(err.message || 'An error occurred')
+      setLoading(false)
+    }
+  }
+
+  return (
+    <div
+      className="fixed inset-0 z-50 flex items-end sm:items-center justify-center"
+      style={{ background: 'rgba(15,23,42,0.88)', backdropFilter: 'blur(10px)' }}
+      onClick={onClose}
+    >
+      <div
+        className="relative w-full max-w-sm rounded-t-3xl sm:rounded-2xl border border-white/10 p-6 shadow-2xl"
+        style={{ background: '#0F172A' }}
+        onClick={e => e.stopPropagation()}
+      >
+        <button
+          onClick={onClose}
+          className="absolute top-5 right-5 text-slate-500 hover:text-white transition-colors"
+        >
+          <X className="w-5 h-5" />
+        </button>
+
+        <h2 className="text-xl font-bold text-white mb-1">Cancel Ride</h2>
+        <p className="text-slate-500 text-xs mb-4">This action cannot be undone</p>
+
+        <div
+          className="rounded-xl border border-white/10 p-4 mb-4"
+          style={{ background: 'rgba(30,41,59,0.6)' }}
+        >
+          <p className="text-[10px] text-slate-500 tracking-widest uppercase mb-2">Trip Details</p>
+          <p className="text-sm text-white font-medium mb-1">{ticket.from_station} → {ticket.to_station}</p>
+          <p className="text-xs text-slate-400">{getModeLabel(ticket.mode)} • {shortId(ticket.ticket_id)}</p>
+          <p className="text-xs text-slate-500 mt-1.5">Booked: {formatDate(ticket.issued_at)}</p>
+        </div>
+
+        <div
+          className="rounded-xl border border-white/10 p-4 mb-4"
+          style={{ background: 'rgba(30,41,59,0.6)' }}
+        >
+          <p className="text-[10px] text-slate-500 tracking-widest uppercase mb-2">Refund Breakdown</p>
+          <div className="space-y-1.5">
+            <div className="flex justify-between text-xs">
+              <span className="text-slate-400">Fare Amount</span>
+              <span className="text-white font-medium">₹{grossFare.toFixed(2)}</span>
+            </div>
+            {fee > 0 && (
+              <div className="flex justify-between text-xs">
+                <span className="text-slate-400">Cancellation Fee</span>
+                <span className="text-rose-400">−₹{fee.toFixed(2)}</span>
+              </div>
+            )}
+            <div className="border-t border-white/10 pt-1.5 flex justify-between">
+              <span className="text-xs font-semibold text-slate-300">You'll Get Back</span>
+              <span className={cn('text-sm font-bold', refundAmount > 0 ? 'text-green-400' : 'text-slate-500')}>
+                ₹{refundAmount.toFixed(2)}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <div className="mb-5">
+          <p className="text-[10px] text-slate-500 tracking-widest uppercase mb-2">Reason</p>
+          <div className="space-y-2">
+            <label
+              className="flex items-center gap-3 p-3 rounded-lg border border-white/10 cursor-pointer hover:bg-white/5 transition-colors"
+              style={{ background: reason === 'user' ? 'rgba(10,165,230,0.1)' : 'rgba(30,41,59,0.6)' }}
+            >
+              <input
+                type="radio"
+                name="reason"
+                value="user"
+                checked={reason === 'user'}
+                onChange={e => setReason(e.target.value)}
+                className="w-4 h-4 accent-[#0EA5E9]"
+              />
+              <span className="text-xs text-white font-medium">I want to cancel</span>
+            </label>
+          </div>
+        </div>
+
+        {reason === 'user' && (
+          <div
+            className="rounded-lg border border-amber-500/20 p-3 mb-4 flex gap-2"
+            style={{ background: 'rgba(217,119,6,0.08)' }}
+          >
+            <Zap className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
+            <div className="text-xs text-amber-200">
+              <p className="font-semibold">Anti-Griefing Fee</p>
+              <p className="text-amber-300/80 mt-0.5">₹0.50 fee applies to prevent spam cancellations</p>
+            </div>
+          </div>
+        )}
+
+        {error && (
+          <div
+            className="rounded-lg border border-rose-500/20 p-3 mb-4 flex gap-2"
+            style={{ background: 'rgba(244,63,94,0.08)' }}
+          >
+            <div className="text-xs text-rose-200">
+              <p className="font-semibold">Error</p>
+              <p className="text-rose-300/80 mt-0.5">{error}</p>
+            </div>
+          </div>
+        )}
+
+        <button
+          onClick={handleRefund}
+          disabled={loading || success}
+          className={cn(
+            'w-full font-bold py-3.5 rounded-xl text-sm transition-all duration-200 flex items-center justify-center gap-2',
+            success
+              ? 'bg-green-500 text-white'
+              : loading
+                ? 'bg-slate-600 text-white'
+                : 'bg-rose-500 hover:bg-rose-600 text-white shadow-lg shadow-rose-500/25',
+          )}
+        >
+          {success ? (
+            <>
+              <CheckCircle2 className="w-4 h-4" /> Refund Processed!
+            </>
+          ) : loading ? (
+            <>Processing...</>
+          ) : (
+            <>Cancel Ride & Refund ₹{refundAmount.toFixed(2)}</>
+          )}
+        </button>
+
+        <p className="text-[10px] text-slate-700 text-center mt-3 tracking-wide">
+          Refund will be credited to your wallet instantly
+        </p>
+      </div>
+    </div>
+  )
+}
+
 // ─── Add Money Modal ──────────────────────────────────────────────────────────
 
 const QUICK_AMOUNTS = [100, 250, 500, 1000, 2000, 5000]
 
 function AddMoneyModal({ onClose, onAdd }) {
-  const [input,    setInput]    = useState('')
+  const [input, setInput] = useState('')
   const [selected, setSelected] = useState(null)
-  const [success,  setSuccess]  = useState(false)
+  const [success, setSuccess] = useState(false)
 
-  const parsed  = parseFloat(input)
-  const amount  = selected !== null ? selected : (!isNaN(parsed) ? parsed : 0)
+  const parsed = parseFloat(input)
+  const amount = selected !== null ? selected : (!isNaN(parsed) ? parsed : 0)
   const isValid = amount > 0 && amount <= 100000
 
   function handleQuickPick(val) {
@@ -202,12 +365,12 @@ function TicketModal({ ticket, onClose }) {
   if (!ticket) return null
 
   const qrValue = JSON.stringify({
-    ticket_id:     ticket.ticket_id,
+    ticket_id: ticket.ticket_id,
     commuter_name: ticket.commuter_name,
-    from_station:  ticket.from_station,
-    to_station:    ticket.to_station,
-    mode:          ticket.mode,
-    issued_at:     ticket.issued_at,
+    from_station: ticket.from_station,
+    to_station: ticket.to_station,
+    mode: ticket.mode,
+    issued_at: ticket.issued_at,
   })
 
   const isValid = ticket.valid_until ? new Date(ticket.valid_until) > new Date() : true
@@ -252,10 +415,10 @@ function TicketModal({ ticket, onClose }) {
           style={{ background: 'rgba(30,41,59,0.6)' }}
         >
           {[
-            { label: 'Ticket ID',   value: shortId(ticket.ticket_id) },
-            { label: 'Route',       value: `${ticket.from_station} → ${ticket.to_station}`, icon: <MapPin className="w-3 h-3" /> },
-            { label: 'Mode',        value: ticket.mode },
-            { label: 'Issued At',   value: formatDate(ticket.issued_at), icon: <Clock className="w-3 h-3" /> },
+            { label: 'Ticket ID', value: shortId(ticket.ticket_id) },
+            { label: 'Route', value: `${ticket.from_station} → ${ticket.to_station}`, icon: <MapPin className="w-3 h-3" /> },
+            { label: 'Mode', value: ticket.mode },
+            { label: 'Issued At', value: formatDate(ticket.issued_at), icon: <Clock className="w-3 h-3" /> },
             { label: 'Valid Until', value: formatDate(ticket.valid_until) },
           ].map(({ label, value, icon }) => (
             <div key={label} className="flex items-start justify-between gap-4 text-sm">
@@ -276,9 +439,12 @@ function TicketModal({ ticket, onClose }) {
   )
 }
 
-function TxRow({ ticket, onViewQR }) {
+// ─── TRANSACTION ROW WITH CANCEL BUTTON ───────────────────────────────────────
+
+function TxRow({ ticket, onViewQR, onCancel }) {
   const { bg, text, border } = getModeColors(ticket.mode)
   const label = getModeLabel(ticket.mode)
+  const isCancelled = ticket.is_cancelled || ticket.mode.includes('CANCELLED')
 
   return (
     <div className="flex items-center gap-3 px-4 py-3.5 border-b border-white/5 hover:bg-white/[0.03] transition-colors cursor-default">
@@ -299,50 +465,84 @@ function TxRow({ ticket, onViewQR }) {
         <span className="text-sm font-semibold text-[#F43F5E]">
           −₹{Number(ticket.fare || 0).toFixed(2)}
         </span>
-        <button
-          onClick={() => onViewQR(ticket)}
-          className="flex items-center gap-1 text-[10px] text-[#0EA5E9] border border-[#0EA5E9]/30 rounded-lg px-2 py-0.5 hover:bg-[#0EA5E9]/10 transition-colors"
-        >
-          <QrCode className="w-3 h-3" />
-          Ticket
-        </button>
+        <div className="flex gap-1">
+          <button
+            onClick={() => onViewQR(ticket)}
+            className="flex items-center gap-1 text-[10px] text-[#0EA5E9] border border-[#0EA5E9]/30 rounded-lg px-2 py-0.5 hover:bg-[#0EA5E9]/10 transition-colors"
+          >
+            <QrCode className="w-3 h-3" />
+            Ticket
+          </button>
+          {!isCancelled && (
+            <button
+              onClick={() => onCancel(ticket)}
+              className="flex items-center gap-1 text-[10px] text-rose-400 border border-rose-400/30 rounded-lg px-2 py-0.5 hover:bg-rose-500/10 transition-colors"
+            >
+              <X className="w-3 h-3" />
+              Cancel
+            </button>
+          )}
+        </div>
       </div>
     </div>
   )
 }
 
-export default function WalletPage() {
-  const [tickets,        setTickets]        = useState([])
-  const [balance,        setBalance]        = useState(0)
-  const [selectedTicket, setSelectedTicket] = useState(null)
-  const [refreshing,     setRefreshing]     = useState(false)
-  const [showAddMoney,   setShowAddMoney]   = useState(false)
+// ─── MAIN WALLET PAGE ──────────────────────────────────────────────────────────
 
-  useEffect(() => { 
-    setTickets(loadTickets());
-    const savedBalance = localStorage.getItem('transitos_balance');
+export default function WalletPage() {
+  const [tickets, setTickets] = useState([])
+  const [balance, setBalance] = useState(0)
+  const [selectedTicket, setSelectedTicket] = useState(null)
+  const [refundTicket, setRefundTicket] = useState(null)
+  const [refreshing, setRefreshing] = useState(false)
+  const [showAddMoney, setShowAddMoney] = useState(false)
+
+  useEffect(() => {
+    setTickets(loadTickets())
+    const savedBalance = localStorage.getItem('transitos_balance')
     if (savedBalance === null) {
-      localStorage.setItem('transitos_balance', '1000.00');
-      setBalance(1000.00);
+      localStorage.setItem('transitos_balance', '1000.00')
+      setBalance(1000.00)
     } else {
-      setBalance(parseFloat(savedBalance));
+      setBalance(parseFloat(savedBalance))
     }
   }, [])
 
   function handleRefresh() {
     setRefreshing(true)
-    setTimeout(() => { 
-      setTickets(loadTickets());
-      const savedBalance = localStorage.getItem('transitos_balance');
-      setBalance(parseFloat(savedBalance || '0'));
-      setRefreshing(false);
+    setTimeout(() => {
+      setTickets(loadTickets())
+      const savedBalance = localStorage.getItem('transitos_balance')
+      setBalance(parseFloat(savedBalance || '0'))
+      setRefreshing(false)
     }, 600)
   }
 
   function handleAddMoney(amount) {
-    const newBalance = parseFloat((balance + amount).toFixed(2));
-    setBalance(newBalance);
-    localStorage.setItem('transitos_balance', newBalance.toString());
+    const newBalance = parseFloat((balance + amount).toFixed(2))
+    setBalance(newBalance)
+    localStorage.setItem('transitos_balance', newBalance.toString())
+  }
+
+  function handleCancelTicket(ticket) {
+    setRefundTicket(ticket)
+  }
+
+  function handleRefundConfirmed(refundAmount) {
+    const newBalance = parseFloat((balance + refundAmount).toFixed(2))
+    setBalance(newBalance)
+    localStorage.setItem('transitos_balance', newBalance.toString())
+
+    // Mark ticket as cancelled in localStorage
+    const updated = tickets.map(t =>
+      t.ticket_id === refundTicket.ticket_id
+        ? { ...t, is_cancelled: true, mode: t.mode.includes('CANCELLED') ? t.mode : `${t.mode} (CANCELLED)` }
+        : t
+    )
+    setTickets(updated)
+    localStorage.setItem('transitos_tickets', JSON.stringify(updated))
+    setRefundTicket(null)
   }
 
   const totalSpent = tickets.reduce((s, t) => s + Number(t.fare || 0), 0)
@@ -354,6 +554,13 @@ export default function WalletPage() {
       )}
       {selectedTicket && (
         <TicketModal ticket={selectedTicket} onClose={() => setSelectedTicket(null)} />
+      )}
+      {refundTicket && (
+        <RefundModal
+          ticket={refundTicket}
+          onClose={() => setRefundTicket(null)}
+          onConfirm={handleRefundConfirmed}
+        />
       )}
 
       <div className="min-h-screen" style={{ background: '#0F172A', fontFamily: "'Space Mono', monospace" }}>
@@ -396,9 +603,6 @@ export default function WalletPage() {
               >
                 <Plus className="w-4 h-4" /> Add Money
               </button>
-              <button className="flex-1 flex items-center justify-center gap-1.5 bg-white/20 hover:bg-white/30 text-white text-sm font-semibold py-2.5 rounded-xl transition-colors">
-                <Send className="w-4 h-4" /> Send Money
-              </button>
             </div>
           </div>
         </div>
@@ -431,7 +635,12 @@ export default function WalletPage() {
               </div>
             ) : (
               tickets.map(ticket => (
-                <TxRow key={ticket.ticket_id} ticket={ticket} onViewQR={setSelectedTicket} />
+                <TxRow
+                  key={ticket.ticket_id}
+                  ticket={ticket}
+                  onViewQR={setSelectedTicket}
+                  onCancel={handleCancelTicket}
+                />
               ))
             )}
           </div>
