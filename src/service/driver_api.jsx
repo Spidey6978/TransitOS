@@ -10,15 +10,19 @@
  *   POST /withdraw_fiat    → initiates a fiat withdrawal to the driver's bank
  */
 
-import axios from 'axios'
+import axios from "axios";
 
 const driverApi = axios.create({
-  baseURL: 'http://127.0.0.1:8000',
+  // 🚨 Force the driver app to look at your laptop via Ngrok, NOT localhost!
+  baseURL: "https://touchily-steamerless-alyssa.ngrok-free.dev", 
   headers: {
-    'Content-Type': 'application/json',
+    "Content-Type": "application/json",
+    // 🛡️ CRITICAL: Bypasses the Ngrok warning screen so the API doesn't get blocked
+    "ngrok-skip-browser-warning": "69420",
   },
-  timeout: 10000, // 10 s — local server should be fast
-})
+});
+
+export default driverApi;
 
 // ─── GET /active_trip ─────────────────────────────────────────────────────────
 // Returns: { trip_id, passenger_name, legs[], mode, distance_km, fare, status }
