@@ -4,7 +4,7 @@ import { Loader2 } from 'lucide-react';
 export default function Dashboard() {
   // 🚨 REPLACE THIS with your actual Render URL!
   // Keep ?embed=true to hide Streamlit's top menu bar
-  const RENDER_STREAMLIT_URL = "https://your-app-name.onrender.com/?embed=true";
+  const RENDER_STREAMLIT_URL = "https://transitdost.onrender.com";
   
   const [isLoading, setIsLoading] = useState(true);
 
