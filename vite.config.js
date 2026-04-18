@@ -13,7 +13,7 @@ export default defineConfig({
   server: {
     proxy: {
       '/api': {
-        target: 'https://crank-chatting-broadcast.ngrok-free.dev',
+        target: 'https://touchily-steamerless-alyssa.ngrok-free.dev',
         changeOrigin: true,
         secure: false,
         rewrite: (path) => path.replace(/^\/api/, ''),
