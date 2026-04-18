@@ -22,8 +22,8 @@ class TransitFareOracle:
         
         # 2. Base RTO Configs for Private Gig Vehicles
         self.private_configs = {
-            "auto": {"base": 23.0, "km": 15.33, "min_km": 1.5, "capacity": 3},
-            "taxi": {"base": 28.0, "km": 18.66, "min_km": 1.5, "capacity": 4},
+            "auto": {"base": 26.0, "km": 15.33, "min_km": 1.5, "capacity": 3},
+            "taxi": {"base": 30.0, "km": 18.66, "min_km": 1.5, "capacity": 4},
             "bike": {"base": 15.0, "km": 8.00,  "min_km": 2.0, "capacity": 1}
         }
 
