@@ -160,7 +160,7 @@ function LegBuilder({ leg, index, stations, onUpdate, onRemove, canRemove, onPin
 
         {isPrivate && leg.status === 'pending' && (
           <span className="ml-auto text-[10px] tracking-widest text-amber-400 border border-amber-500/30 bg-amber-500/10 px-2 py-0.5 rounded-md animate-pulse">
-            Driver 1 assigned
+            ⏳ AWAITING DRIVER SCAN
           </span>
         )}
 
@@ -860,7 +860,7 @@ export default function BookTrip() {
                     </div>
                     {leg.status === 'pending' ? (
                       <span className="text-[9px] tracking-widest text-amber-400 border border-amber-500/30 bg-amber-500/10 px-2 py-0.5 rounded animate-pulse">
-                        Driver 1 assigned
+                        ⏳ AWAITING DRIVER SCAN
                       </span>
                     ) : (
                       <span className="text-[9px] tracking-widest text-green-400 border border-green-500/30 bg-green-500/10 px-2 py-0.5 rounded">
