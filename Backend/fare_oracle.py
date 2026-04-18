@@ -115,3 +115,20 @@ class TransitFareOracle:
             "contract_amounts": amounts_array_wei,
             "total_fare_wei": int(total_fare * 10**18)
         }
+
+    def calculate_settlement_payload(self, trip_legs: list, adults: int = 1, children: int = 0) -> dict:
+        """
+        Legacy Adapter: Prevents main.py from crashing by catching the old method 
+        calls and translating them into the new V4 Escrow Payload format.
+        """
+        passenger_data = {"adults": adults, "children": children, "childrenWithSeats": 0}
+        escrow_data = self.build_escrow_payload(trip_legs, passenger_data)
+        
+        return {
+            "total_fare_inr": escrow_data["total_escrow"],
+            "contract_payload": {
+                "operators": escrow_data["contract_operators"],
+                "amounts_wei": escrow_data["contract_amounts"],
+                "total_fare_wei": escrow_data["total_fare_wei"]
+            }
+        }

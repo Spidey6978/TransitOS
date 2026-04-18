@@ -354,19 +354,22 @@ def book_private_legs(request: BookPrivateLegsRequest):
             actual_adults = request.passengers.adults
             actual_children = request.passengers.children + request.passengers.childrenWithSeats
             
+            # 🔥 THE FIX: Calculate total pure headcount for the vehicle capacity
+            total_humans = actual_adults + actual_children
+            
             start_lat = leg.pickup_coords.lat if leg.pickup_coords else 19.0596
             start_lng = leg.pickup_coords.lng if leg.pickup_coords else 72.8400
             end_lat = leg.drop_coords.lat if leg.drop_coords else 19.1136
             end_lng = leg.drop_coords.lng if leg.drop_coords else 72.8697
             
-            # Force OSRM to recalculate the true distance using your exact coordinates!
+            # Force OSRM to recalculate the true distance using exact coordinates
             dist, _ = pathfinder.fetch_route("auto", "", "", start_lat, start_lng, end_lat, end_lng)
             
-            # Recalculate official base fare based on strict OSRM distance
-            base_private_fare = fare_oracle.calculate_private_fare(leg.mode, dist)
-            
             # 2. Financial Escrow Calculation (Securely re-calculated)
-            gross_fare = base_private_fare * (actual_adults + 0.5 * actual_children)
+            # 🔥 THE FIX: Pass total_humans to the oracle so it can divide by vehicle capacity (3 for Autos).
+            # We REMOVED the `* (actual_adults + 0.5 * actual_children)` multiplication here because
+            # the calculate_private_fare function already calculates the total for ALL required vehicles!
+            gross_fare = fare_oracle.calculate_private_fare(leg.mode, dist, total_humans)
             net_payout = gross_fare * 0.95
             
             # The 0x000 Placeholder Wallet!
