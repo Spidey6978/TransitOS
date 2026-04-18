@@ -81,7 +81,7 @@ export default function Login() {
             </svg>
           </div>
           <div>
-            <div style={styles.logoText}>TransitOS</div>
+            <div style={styles.logoText}>TransitDost</div>
             <div style={styles.logoSub}>Mumbai Mobility Kernel</div>
           </div>
         </div>

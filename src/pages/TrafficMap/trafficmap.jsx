@@ -27,7 +27,7 @@ export default function Dashboard() {
         height="100%"
         frameBorder="0"
         className="w-full h-full border-none relative z-10"
-        title="TransitOS Streamlit Dashboard"
+        title="TransitDost Streamlit Dashboard"
         allowFullScreen
         onLoad={() => setIsLoading(false)}
       />

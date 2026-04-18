@@ -113,7 +113,7 @@ export default function GroupTicketing({ onUpdate, initialData = null }) {
       {/* Adults Counter */}
       <div className="mb-6">
         <label className="text-[10px] text-slate-500 tracking-widest uppercase font-semibold block mb-3">
-          👤 Adults (Full Fare)
+          👤 Adults 
         </label>
         <div className="flex items-center gap-4 bg-slate-900/40 border border-white/5 rounded-lg p-4">
           <button
@@ -157,7 +157,7 @@ export default function GroupTicketing({ onUpdate, initialData = null }) {
       {/* Children with Seats Counter */}
       <div className="mb-6">
         <label className="text-[10px] text-slate-500 tracking-widest uppercase font-semibold block mb-3">
-          👧 Children (5-12 years, with seat)
+          👧 Children (5-12 years)
         </label>
         <div className="flex items-center gap-4 bg-slate-900/40 border border-white/5 rounded-lg p-4">
           <button
@@ -201,7 +201,7 @@ export default function GroupTicketing({ onUpdate, initialData = null }) {
       {/* Children without Seats Counter */}
       <div>
         <label className="text-[10px] text-slate-500 tracking-widest uppercase font-semibold block mb-3">
-          👶 Children (Under 5, no seat)
+          👶 Children (Under 5)
         </label>
         <div className="flex items-center gap-4 bg-slate-900/40 border border-white/5 rounded-lg p-4">
           <button
@@ -245,10 +245,6 @@ export default function GroupTicketing({ onUpdate, initialData = null }) {
       {/* Info Banner */}
       <div className="mt-6 pt-6 border-t border-white/5">
         <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg px-4 py-3">
-          <p className="text-[10px] text-blue-300 leading-relaxed">
-            <span className="font-semibold">ℹ️ One QR ticket covers all passengers.</span> The ticket is valid for
-            everyone in your group. Conductors will scan it once.
-          </p>
         </div>
       </div>
     </div>

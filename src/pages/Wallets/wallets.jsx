@@ -391,7 +391,7 @@ function TicketModal({ ticket, onClose }) {
         </button>
 
         <div className="flex flex-col items-center mb-5">
-          <h2 className="text-lg font-bold tracking-widest uppercase text-[#22D3EE]">TransitOS</h2>
+          <h2 className="text-lg font-bold tracking-widest uppercase text-[#22D3EE]">TransitDost</h2>
           <p className="text-[10px] text-slate-500 tracking-widest uppercase">Mumbai Unified Transit</p>
           <span className={cn(
             'mt-2 inline-flex items-center gap-1.5 text-xs px-3 py-1 rounded-full border',
@@ -565,7 +565,7 @@ export default function WalletPage() {
 
       <div className="min-h-screen" style={{ background: '#0F172A', fontFamily: "'Space Mono', monospace" }}>
         <div className="flex items-center justify-between px-5 pt-5 pb-2">
-          <span className="text-[#0EA5E9] font-bold tracking-widest text-base">TransitOS</span>
+          <span className="text-[#0EA5E9] font-bold tracking-widest text-base">TransitDost</span>
           <button onClick={handleRefresh} className="text-slate-500 hover:text-white transition-colors">
             <RefreshCw className={cn('w-4 h-4', refreshing && 'animate-spin')} />
           </button>

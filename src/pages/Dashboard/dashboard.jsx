@@ -35,11 +35,11 @@ function generateMockTicket(id) {
   if (mode === "AC Metro") fare *= 1.5;
   fare = +fare.toFixed(2);
   const splits = {
-    "Local Train": `Railways: ₹${+(fare*0.95).toFixed(2)} | TransitOS: ₹${+(fare*0.05).toFixed(2)}`,
-    "Metro":       `MMRDA: ₹${+(fare*0.90).toFixed(2)} | TransitOS: ₹${+(fare*0.10).toFixed(2)}`,
-    "AC Metro":    `MMRDA: ₹${+(fare*0.90).toFixed(2)} | TransitOS: ₹${+(fare*0.10).toFixed(2)}`,
-    "Hybrid":      `Railways: ₹${+(fare*0.50).toFixed(2)} | BEST: ₹${+(fare*0.40).toFixed(2)} | TransitOS: ₹${+(fare*0.10).toFixed(2)}`,
-    "Ferry":       `Operator: ₹${+(fare*0.95).toFixed(2)} | TransitOS: ₹${+(fare*0.05).toFixed(2)}`,
+    "Local Train": `Railways: ₹${+(fare*0.95).toFixed(2)} | TransitDost: ₹${+(fare*0.05).toFixed(2)}`,
+    "Metro":       `MMRDA: ₹${+(fare*0.90).toFixed(2)} | TransitDost: ₹${+(fare*0.10).toFixed(2)}`,
+    "AC Metro":    `MMRDA: ₹${+(fare*0.90).toFixed(2)} | TransitDost: ₹${+(fare*0.10).toFixed(2)}`,
+    "Hybrid":      `Railways: ₹${+(fare*0.50).toFixed(2)} | BEST: ₹${+(fare*0.40).toFixed(2)} | TransitDost: ₹${+(fare*0.10).toFixed(2)}`,
+    "Ferry":       `Operator: ₹${+(fare*0.95).toFixed(2)} | TransitDost: ₹${+(fare*0.05).toFixed(2)}`,
   };
   return {
     hash: `0x${Math.random().toString(16).slice(2,12)}...`,

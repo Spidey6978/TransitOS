@@ -579,7 +579,7 @@ export default function ValidatorPage() {
 
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-4 border-b border-white/5">
-        <span className="text-cyan-400 font-bold tracking-widest text-sm">TransitOS Validator</span>
+        <span className="text-cyan-400 font-bold tracking-widest text-sm">TransitDost Validator</span>
         <div className="flex items-center gap-2">
           <button
             onClick={() => setOnline(v => !v)}
@@ -670,7 +670,7 @@ export default function ValidatorPage() {
               : <XCircle      className="w-16 h-16 text-rose-400 mb-4" />
             }
             <h2 className="text-2xl font-bold text-white mb-2">
-              {lastResult.valid ? 'Access Granted' : 'Access Denied'}
+              {lastResult.valid ? 'Ticket validated' : 'TIcket invalid'}
             </h2>
             <p className="text-slate-400 text-sm">{lastResult.reason}</p>
           </div>

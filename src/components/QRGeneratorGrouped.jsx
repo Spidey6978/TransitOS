@@ -63,7 +63,7 @@ export default function QRGeneratorGrouped({ ticket, passengerData, onBookAnothe
 
       {/* Brand */}
       <h2 className="text-xl font-bold text-cyan-400 tracking-widest uppercase mb-1">
-        TransitOS
+        TransitDost
       </h2>
       <p className="text-[10px] text-slate-500 tracking-widest uppercase mb-3">
         Mumbai Unified Transit

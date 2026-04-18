@@ -76,7 +76,7 @@ export default function Sidebar() {
           {!collapsed && (
             <div className="animate-in fade-in duration-300">
               <h1 className="text-sm font-bold text-cyan-400 tracking-widest uppercase leading-tight">
-                TransitOS
+                TransitDost
               </h1>
               <p className="text-[10px] text-slate-500 tracking-widest uppercase mt-0.5">
                 {role} Portal

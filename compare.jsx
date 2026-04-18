@@ -358,7 +358,7 @@ export default function WalletPage() {
 
       <div className="min-h-screen" style={{ background: '#0F172A', fontFamily: "'Space Mono', monospace" }}>
         <div className="flex items-center justify-between px-5 pt-5 pb-2">
-          <span className="text-[#0EA5E9] font-bold tracking-widest text-base">TransitOS</span>
+          <span className="text-[#0EA5E9] font-bold tracking-widest text-base">TransitDost</span>
           <button onClick={handleRefresh} className="text-slate-500 hover:text-white transition-colors">
             <RefreshCw className={cn('w-4 h-4', refreshing && 'animate-spin')} />
           </button>
