@@ -10,7 +10,7 @@ import DriverLayout from "./Layouts/DriverLayout"
 
 // Pages
 import Dashboard from "./pages/Dashboard/dashboard"
-import BookTrip from "./pages/BookTrip/booktrip"
+import BookTrip from "./pages/Booktrip/booktrip"
 import Wallets from "./pages/Wallets/wallets"
 import QRValidator from "./pages/QRValidator/validator"
 import TrafficMap from "./pages/TrafficMap/trafficmap"
