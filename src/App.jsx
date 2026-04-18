@@ -15,7 +15,6 @@ import Wallets from "./pages/Wallets/wallets"
 import QRValidator from "./pages/QRValidator/validator"
 import TrafficMap from "./pages/TrafficMap/trafficmap"
 import ActiveTrip from "./pages/Driver/ActiveTrip"
-import DriverWallet from "./pages/Driver/DriverWallet"
 
 // ... (imports remain the same)
 
@@ -70,12 +69,6 @@ export default function App() {
         </AuthGuard>
       }/>
       
-      <Route path="/driver/wallet" element={
-        <AuthGuard roles={["driver"]}>
-          <DriverLayout><DriverWallet /></DriverLayout>
-        </AuthGuard>
-      }/>
-
       <Route path="*" element={<Navigate to="/" />} />
     </Routes>
   )
