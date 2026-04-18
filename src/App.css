@@ -182,3 +182,19 @@
     border-right-color: var(--border);
   }
 }
+
+.user-layout-bg {
+  background-image: url('/user-bg.jpg');
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
+  min-height: 100vh;
+}
+
+.admin-layout-bg {
+  background-image: url('/admin-bg.jpg');
+  background-size: cover;
+  background-position: center;
+  background-attachment: fixed;
+  min-height: 100vh;
+}
