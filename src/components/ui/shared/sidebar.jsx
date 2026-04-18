@@ -27,7 +27,7 @@ const NAV_ITEMS = [
   // Conductor & Driver
   { href: '/validate', label: 'Validator', icon: ScanLine, roles: ['conductor', 'driver'] },
   { href: '/driver/active', label: 'Active Trip', icon: Navigation, roles: ['driver'] },
-  { href: '/driver/wallet', label: 'Wallet', icon: Wallet, roles: ['driver'] },
+
 ]
 
 export default function Sidebar() {
