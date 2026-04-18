@@ -10,7 +10,7 @@ import json
 from datetime import datetime
 
 st.set_page_config(
-    page_title="TransitOS",
+    page_title="TransitDost",
     page_icon="🚦",
     layout="wide",
     initial_sidebar_state="collapsed",
@@ -402,7 +402,7 @@ title_col, ctrl_col = st.columns([5, 2])
 
 with title_col:
     st.markdown(
-        '<div class="dashboard-title">🚦 TransitOS Smart Traffic</div>'
+        '<div class="dashboard-title">🚦 TransitDost Smart Traffic</div>'
         '<div class="dashboard-subtitle">Multi-Modal Telemetry Engine · MMR</div>',
         unsafe_allow_html=True,
     )
@@ -550,50 +550,7 @@ else:
 # ══════════════════════════════════════════════════════════════════════════════
 if not df.empty:
     st.markdown("---")
-    col_chart, col_table = st.columns([3, 2], gap="large")
-
-    with col_chart:
-        st.markdown("### Traffic Activity Over Time")
-
-        traffic_counts = df.reset_index(drop=True).assign(Interval=lambda x: x.index // 10).groupby("Interval").size().reset_index(name="Events")
-
-        def get_mode_counts(mode_name):
-            return df[df["mode"] == mode_name].reset_index(drop=True).assign(Interval=lambda x: x.index // 10).groupby("Interval").size().reset_index(name="Events")
-
-        fig = go.Figure()
-
-        # Helper to add Plotly traces
-        def add_wave_trace(data, name, hex_color, rgb_fill):
-            if not data.empty:
-                fig.add_trace(go.Scatter(
-                    x=data["Interval"], y=data["Events"], mode="lines", name=name,
-                    line=dict(color=hex_color, width=2, shape="spline", smoothing=1.2),
-                    fill="tozeroy", fillcolor=rgb_fill,
-                    hovertemplate=f"<b>{name} · Interval %{{x}}</b><br>Events: %{{y}}<extra></extra>",
-                ))
-
-        add_wave_trace(get_mode_counts("TRAIN"), "Train", "#00E5FF", "rgba(0,229,255,0.07)")
-        add_wave_trace(get_mode_counts("METRO"), "Metro", "#a855f7", "rgba(168,85,247,0.07)")
-        add_wave_trace(get_mode_counts("BUS"),   "Bus",   "#10b981", "rgba(16,185,129,0.07)")
-        add_wave_trace(get_mode_counts("AUTO"),  "Auto",  "#FF8C00", "rgba(255,140,0,0.07)")
-
-        # Peak dots
-        fig.add_trace(go.Scatter(
-            x=traffic_counts["Interval"], y=traffic_counts["Events"], mode="markers",
-            marker=dict(color="#ff2d2d", size=4, opacity=0.75, line=dict(color="#ff8080", width=1)),
-            hoverinfo="skip", showlegend=False,
-        ))
-
-        fig.update_layout(
-            paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
-            margin=dict(l=10, r=10, t=10, b=10), height=270, showlegend=True,
-            legend=dict(font=dict(family="Share Tech Mono", size=9, color="#64748b"), bgcolor="rgba(0,0,0,0)", x=1, xanchor="right", y=1),
-            xaxis=dict(showgrid=True, gridcolor="rgba(255,255,255,0.04)", tickfont=dict(family="Share Tech Mono", size=10, color="#475569"), zeroline=False, showline=False, title=None),
-            yaxis=dict(showgrid=True, gridcolor="rgba(255,255,255,0.04)", tickfont=dict(family="Share Tech Mono", size=10, color="#475569"), zeroline=False, showline=False, title=None),
-            hoverlabel=dict(bgcolor="#0a0f1e", bordercolor="#00cfff", font=dict(family="Share Tech Mono", size=11, color="#00cfff")),
-        )
-        st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False})
-
+    col_table = st.columns([1])[0]  # Or simply: col_table, = st.columns(1)  # Full width
     with col_table:
         st.markdown("### Recent Trips")
         show_cols = [c for c in ["start_station", "end_station", "mode", "total_fare", "_status"] if c in df.columns]
