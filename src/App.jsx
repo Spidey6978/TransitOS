@@ -7,6 +7,7 @@ import AdminLayout from "./Layouts/AdminLayout"
 import ConductorLayout from "./Layouts/ConductorLayout"
 import UserLayout from "./Layouts/UserLayout"
 import DriverLayout from "./Layouts/DriverLayout"
+import ActiveTrip from "./pages/Driver/ActiveTrip"
 
 // Pages
 import Dashboard from "./pages/Dashboard/dashboard"
@@ -26,6 +27,13 @@ export default function App() {
       <Route path="/dashboard" element={
         <AuthGuard roles={["admin"]}>
           <AdminLayout><Dashboard /></AdminLayout>
+        </AuthGuard>
+      }/>
+
+      {/* Driver Routes */}
+      <Route path="/driver/active" element={
+        <AuthGuard roles={["driver"]}>
+          <DriverLayout><ActiveTrip /></DriverLayout>
         </AuthGuard>
       }/>
 
