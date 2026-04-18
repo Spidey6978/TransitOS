@@ -1,27 +1,41 @@
 import { useState } from 'react'
 import { NavLink, useNavigate } from 'react-router-dom'
 import {
-  LayoutDashboard, MapPin, Wallet, LogOut, ScanLine,
-  PanelLeftClose, PanelLeftOpen, CarFront, Navigation, Map
+  LayoutDashboard,
+  MapPin,
+  Wallet,
+  LogOut,
+  ScanLine,
+  PanelLeftClose,
+  PanelLeftOpen,
+  CarFront,
+  Navigation,
+  Map
 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/ui/button'
 
 const NAV_ITEMS = [
-  { href: '/dashboard',     label: 'Dashboard',   icon: LayoutDashboard, roles: ['admin'] },
-  { href: '/map',           label: 'Traffic Map',  icon: Map,             roles: ['admin'] },
-  { href: '/book',          label: 'Book Trip',    icon: MapPin,          roles: ['user'] },
-  { href: '/wallets',       label: 'Wallets',      icon: Wallet,          roles: ['user'] },
-  { href: '/validate',      label: 'Validator',    icon: ScanLine,        roles: ['conductor'] },
-  { href: '/driver/active', label: 'Active Trip',  icon: Navigation,      roles: ['driver'] },
-  { href: '/driver/wallet', label: 'Wallet',       icon: Wallet,          roles: ['driver'] },
-  { href: '/validate',      label: 'Validator',    icon: ScanLine,        roles: ['driver'] },
+  // Admin & General
+  { href: '/dashboard', label: 'Dashboard', icon: LayoutDashboard, roles: ['admin'] },
+  { href: '/map', label: 'Traffic Map', icon: Map, roles: ['admin', 'user'] },
+
+  // User Specific
+  { href: '/book', label: 'Book Trip', icon: MapPin, roles: ['user'] },
+  { href: '/wallets', label: 'Wallets', icon: Wallet, roles: ['user'] },
+
+  // Conductor & Driver
+  { href: '/validate', label: 'Validator', icon: ScanLine, roles: ['conductor', 'driver'] },
+  { href: '/driver/active', label: 'Active Trip', icon: Navigation, roles: ['driver'] },
+  { href: '/driver/wallet', label: 'Wallet', icon: Wallet, roles: ['driver'] },
 ]
 
 export default function Sidebar() {
   const [collapsed, setCollapsed] = useState(false)
   const navigate = useNavigate()
   const role = localStorage.getItem('transitos_role')
+
+  // Filter items based on the logged-in user's role
   const visibleItems = NAV_ITEMS.filter(item => item.roles.includes(role))
 
   function handleLogout() {
@@ -31,6 +45,7 @@ export default function Sidebar() {
 
   return (
     <div className="relative flex shrink-0">
+      {/* Floating Toggle Button */}
       <button
         onClick={() => setCollapsed(!collapsed)}
         className={cn(
@@ -42,13 +57,15 @@ export default function Sidebar() {
         {collapsed ? <PanelLeftOpen className="w-4 h-4" /> : <PanelLeftClose className="w-4 h-4" />}
       </button>
 
+      {/* Sidebar Container */}
       <aside className={cn(
         "relative h-screen flex flex-col",
         "bg-slate-900/40 backdrop-blur-md border-r border-white/10",
         "transition-all duration-300 overflow-hidden",
         collapsed ? "w-16" : "w-64"
       )}>
-        {/* Logo */}
+        
+        {/* Logo Section */}
         <div className={cn(
           "flex items-center border-b border-white/10 shrink-0",
           collapsed ? "justify-center px-0 py-5" : "px-5 py-5 gap-3"
@@ -57,7 +74,7 @@ export default function Sidebar() {
             <CarFront className="w-6 h-6 text-cyan-400" />
           </div>
           {!collapsed && (
-            <div>
+            <div className="animate-in fade-in duration-300">
               <h1 className="text-sm font-bold text-cyan-400 tracking-widest uppercase leading-tight">
                 TransitOS
               </h1>
@@ -68,7 +85,7 @@ export default function Sidebar() {
           )}
         </div>
 
-        {/* Nav */}
+        {/* Navigation Items */}
         <nav className="flex-1 px-2 py-4 space-y-1 overflow-y-auto overflow-x-hidden">
           {visibleItems.map((item, idx) => {
             const Icon = item.icon
@@ -97,7 +114,7 @@ export default function Sidebar() {
           })}
         </nav>
 
-        {/* Logout */}
+        {/* Logout Section */}
         <div className={cn(
           "border-t border-white/10 shrink-0",
           collapsed ? "px-2 py-4" : "px-3 py-4"
