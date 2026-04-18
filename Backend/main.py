@@ -1,3 +1,4 @@
+
 import sqlite3
 import math
 import json
@@ -14,12 +15,13 @@ from slowapi import Limiter
 from slowapi.util import get_remote_address
 from slowapi.errors import RateLimitExceeded
 from fastapi.responses import JSONResponse
+from fastapi import HTTPException
 
 # --- Local Imports ---
 from Backend.mumbai_data import MUMBAI_LOCATIONS, get_coords
 from Backend.models import (OfflineSyncPayload, TicketResponse, SyncResponse, 
                             TicketRequest, ValidateTicketRequest, DriverScanRequest, 
-                            FiatWithdrawal, TripLeg, BookPrivateLegsRequest)
+                            FiatWithdrawal, TripLeg, BookPrivateLegsRequest, CancelRequest)
 from Backend.web3_bridge import settle_trip_on_chain
 from Backend.fare_oracle import TransitFareOracle 
 from Backend.osrm_routing import TransitPathfinder 
@@ -621,52 +623,52 @@ class CancelRequest(BaseModel):
     leg_id: str
     reason: str = "User requested cancellation"
 
-# @app.post("/driver_cancel")
-# def driver_cancel(payload: CancelRequest):
-#     """
-#     Triggered when a Gig Worker cancels the ride.
-#     Commuter gets 100% of their money back. TransitOS eats the gas cost.
-#     """
-#     leg_ticket_id = f"{payload.ticket_id}_private_{payload.leg_id}"
+@app.post("/driver_cancel")
+def driver_cancel(payload: CancelRequest):
+    """
+    Triggered when a Gig Worker cancels the ride.
+    Commuter gets 100% of their money back. TransitOS eats the gas cost.
+    """
+    leg_ticket_id = f"{payload.ticket_id}_private_{payload.leg_id}"
     
-#     with sqlite3.connect(DB_FILE) as conn:
-#         c = conn.cursor()
-#         # 🔥 FIX: Querying route_path (the JSON column) instead of operator_split
-#         c.execute("SELECT total_fare, mode, route_path FROM ledger WHERE ticket_id = ?", (leg_ticket_id,))
-#         row = c.fetchone()
+    with sqlite3.connect(DB_FILE) as conn:
+        c = conn.cursor()
+        # 🔥 FIX: Querying route_path (the JSON column) instead of operator_split
+        c.execute("SELECT total_fare, mode, route_path FROM ledger WHERE ticket_id = ?", (leg_ticket_id,))
+        row = c.fetchone()
         
-#         if not row:
-#             raise HTTPException(status_code=404, detail="Private Leg not found")
-#         if "CANCELLED" in row[1]:
-#             raise HTTPException(status_code=400, detail="Leg already cancelled")
+        if not row:
+            raise HTTPException(status_code=404, detail="Private Leg not found")
+        if "CANCELLED" in row[1]:
+            raise HTTPException(status_code=400, detail="Leg already cancelled")
             
-#         gross_fare = row[0]
-#         # Safely parse the JSON route data
-#         route_data = json.loads(row[2]) if row[2] else {}
-#         operators = route_data.get("escrow", {}).get("operators", [])
+        gross_fare = row[0]
+        # Safely parse the JSON route data
+        route_data = json.loads(row[2]) if row[2] else {}
+        operators = route_data.get("escrow", {}).get("operators", [])
         
-#         # Verify it hasn't been handshaked by another driver yet
-#         if "0x0000000000000000000000000000000000000000" not in operators:
-#             raise HTTPException(status_code=400, detail="Cannot cancel: A driver has already claimed this escrow.")
+        # Verify it hasn't been handshaked by another driver yet
+        if "0x0000000000000000000000000000000000000000" not in operators:
+            raise HTTPException(status_code=400, detail="Cannot cancel: A driver has already claimed this escrow.")
             
-#         # The driver's specific 95% cut is what sits in the 0x000 wallet
-#         refund_amount_wei = int(gross_fare * 0.95 * 10**18) 
+        # The driver's specific 95% cut is what sits in the 0x000 wallet
+        refund_amount_wei = int(gross_fare * 0.95 * 10**18) 
         
-#         # 1. Trigger the Smart Contract Sweep
-#         # tx_hash = sweep_escrow_on_chain(refund_amount_wei)
-#         # if tx_hash.startswith("ERR_"):
-#         #     raise HTTPException(status_code=500, detail="Blockchain sweep failed")
+        # 1. Trigger the Smart Contract Sweep
+        tx_hash = sweep_escrow_on_chain(refund_amount_wei)
+        if tx_hash.startswith("ERR_"):
+            raise HTTPException(status_code=500, detail="Blockchain sweep failed")
         
-#         # 2. Mark as Cancelled in the database so it can't be scanned
-#         new_mode = f"{row[1]} (CANCELLED)"
-#         c.execute("UPDATE ledger SET mode = ? WHERE ticket_id = ?", (new_mode, leg_ticket_id))
-#         conn.commit()
+        # 2. Mark as Cancelled in the database so it can't be scanned
+        new_mode = f"{row[1]} (CANCELLED)"
+        c.execute("UPDATE ledger SET mode = ? WHERE ticket_id = ?", (new_mode, leg_ticket_id))
+        conn.commit()
         
-#     return {
-#         "status": "refund_swept",
-#         "refund_amount_inr": gross_fare, # 100% Refund
-#         "message": "Funds returned to treasury. UI should credit commuter wallet."
-#     }
+    return {
+        "status": "refund_swept",
+        "refund_amount_inr": gross_fare, # 100% Refund
+        "message": "Funds returned to treasury. UI should credit commuter wallet."
+    }
 
 class CancelRequest(BaseModel):
     ticket_id: str

@@ -85,3 +85,13 @@ class FiatWithdrawal(BaseModel):
     driver_id: str
     driver_wallet: str
     amount_inr: float
+
+class CancelRequest(BaseModel):
+    # The parent journey ID (e.g., TKT-A1B2C3)
+    ticket_id: str
+    
+    # The specific leg to cancel (e.g., LEG_AUTO_1)
+    leg_id: str
+    
+    # Optional metadata for the ledger
+    reason: str = "User requested cancellation"

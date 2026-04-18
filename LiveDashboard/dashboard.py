@@ -6,6 +6,7 @@ import plotly.graph_objects as go
 import time
 import random
 import requests
+import json
 from datetime import datetime
 
 st.set_page_config(
@@ -98,7 +99,7 @@ html, body, [class*="css"] {
     color: #00ffaa !important;
 }
 
-/* ── ECONOMIC KPI CARDS ── */
+/* ── ECONOMIC KPI CARDS (4-MODES) ── */
 .kpi-row {
     display: flex;
     gap: 14px;
@@ -120,13 +121,19 @@ html, body, [class*="css"] {
     position: absolute;
     top: 0; left: 0; right: 0;
     height: 2px;
-    background: linear-gradient(90deg, #7c3aed, #00cfff);
 }
+.kpi-card.train-card { border-color: rgba(0,229,255,0.3); }
+.kpi-card.train-card::before { background: linear-gradient(90deg,#00cfff,#00E5FF); }
+
+.kpi-card.metro-card { border-color: rgba(168,85,247,0.3); }
+.kpi-card.metro-card::before { background: linear-gradient(90deg,#7c3aed,#a855f7); }
+
+.kpi-card.bus-card { border-color: rgba(16,185,129,0.3); }
+.kpi-card.bus-card::before { background: linear-gradient(90deg,#059669,#10b981); }
+
 .kpi-card.auto-card { border-color: rgba(255,140,0,0.3); }
 .kpi-card.auto-card::before { background: linear-gradient(90deg,#FF8C00,#ffbe00); }
-.kpi-card.metro-card { border-color: rgba(0,229,255,0.3); }
-.kpi-card.metro-card::before { background: linear-gradient(90deg,#00E5FF,#00ffaa); }
-.kpi-card.split-card { border-color: rgba(124,58,237,0.35); }
+
 .kpi-label {
     font-family: 'Share Tech Mono', monospace;
     font-size: 0.58rem;
@@ -142,9 +149,11 @@ html, body, [class*="css"] {
     color: #e2e8f0;
     line-height: 1.1;
 }
+.kpi-value.train-val { color: #00E5FF; }
+.kpi-value.metro-val { color: #a855f7; }
+.kpi-value.bus-val   { color: #10b981; }
 .kpi-value.auto-val  { color: #FF8C00; }
-.kpi-value.metro-val { color: #00E5FF; }
-.kpi-value.split-val { color: #a78bfa; }
+
 .kpi-sub {
     font-family: 'Share Tech Mono', monospace;
     font-size: 0.58rem;
@@ -312,76 +321,79 @@ OLNG = "olng"
 DLAT = "dlat"
 DLNG = "dlng"
 
-# ── Ensure mode column exists (use real backend value if present, else simulate)
-if not df.empty and "mode" not in df.columns:
-    df["mode"] = df.apply(lambda _: random.choice(["AUTO", "METRO"]), axis=1)
-elif not df.empty:
-    # Normalise backend values (Metro/BEST_Bus/Hybrid → METRO, else AUTO)
+# ── 4-MODE NORMALISATION ──────────────────────────────────────────────────────
+if not df.empty:
     def _normalise_mode(m):
         m = str(m).upper()
-        if any(k in m for k in ["METRO", "BUS", "HYBRID", "RAIL"]):
-            return "METRO"
+        if "TRAIN" in m or "RAIL" in m: return "TRAIN"
+        if "METRO" in m or "MONO" in m: return "METRO"
+        if "BUS" in m: return "BUS"
         return "AUTO"
-    df["mode"] = df["mode"].apply(_normalise_mode)
+    
+    if "mode" in df.columns:
+        df["mode"] = df["mode"].apply(_normalise_mode)
+    else:
+        df["mode"] = df.apply(lambda _: random.choice(["AUTO", "METRO", "TRAIN", "BUS"]), axis=1)
 
-# ── OSRM real-road routing ────────────────────────────────────────────────────
+# ── RESTORED: OSRM Real-Road Fallback ─────────────────────────────────────────
 @st.cache_data(ttl=300)
 def fetch_osrm_route(lat1, lon1, lat2, lon2):
-    """Fetch a real driving path from OSRM; fallback to straight line."""
+    """Fetch a real driving path from OSRM for old tickets that lack DB paths."""
     try:
-        url = (
-            f"http://router.project-osrm.org/route/v1/driving/"
-            f"{lon1},{lat1};{lon2},{lat2}"
-            f"?overview=full&geometries=geojson"
-        )
+        url = f"http://router.project-osrm.org/route/v1/driving/{lon1},{lat1};{lon2},{lat2}?overview=full&geometries=geojson"
         res = requests.get(url, timeout=5)
         if res.status_code == 200:
             data = res.json()
             if data.get("routes") and len(data["routes"]) > 0:
                 coords = data["routes"][0]["geometry"]["coordinates"]
                 return coords
-    except Exception as e:
+    except Exception:
         pass
     return [[lon1, lat1], [lon2, lat2]]
 
 @st.cache_data(ttl=120)
 def build_paths(_df):
-    """Attach an OSRM path to every row (deduplicated by route key)."""
-    if _df.empty:
-        return _df
+    """
+    Extracts the path natively from the DB. 
+    If missing, it falls back to the OSRM API to save the old tickets from being straight lines!
+    """
+    if _df.empty: return _df
     df_copy = _df.copy()
     paths = []
     seen = {}
+    
     for _, row in df_copy.iterrows():
-        key = (
-            round(row[OLAT], 4), round(row[OLNG], 4),
-            round(row[DLAT], 4), round(row[DLNG], 4),
-        )
+        # 1. Look for the DB path first
+        if "route_path" in row and pd.notna(row["route_path"]):
+            try:
+                parsed = json.loads(row["route_path"]) if isinstance(row["route_path"], str) else row["route_path"]
+                if parsed and isinstance(parsed, list) and len(parsed) > 0:
+                    paths.append(parsed)
+                    continue
+            except Exception:
+                pass
+                
+        # 2. Fallback to OSRM API if DB path is missing
+        key = (round(row[OLAT], 4), round(row[OLNG], 4), round(row[DLAT], 4), round(row[DLNG], 4))
         if key not in seen:
-            seen[key] = fetch_osrm_route(
-                row[OLAT], row[OLNG],
-                row[DLAT], row[DLNG],
-            )
+            seen[key] = fetch_osrm_route(row[OLAT], row[OLNG], row[DLAT], row[DLNG])
         paths.append(seen[key])
+        
     df_copy["path"] = paths
     return df_copy
 
-# ── stats ──────────────────────────────────────────────────────────────────────
+# ── stats & economics ──────────────────────────────────────────────────────────
 total_events   = len(df)
 active_origins = df[[OLAT, OLNG]].drop_duplicates().shape[0] if not df.empty else 0
 unique_dest    = df[[DLAT, DLNG]].drop_duplicates().shape[0] if not df.empty else 0
 congestion_pct = min(int((1 - active_origins / max(total_events, 1)) * 100), 99) if total_events > 0 else 0
 
-# ── economic KPIs ──────────────────────────────────────────────────────────────
+rev = {"AUTO": 0, "TRAIN": 0, "METRO": 0, "BUS": 0}
 if not df.empty and "total_fare" in df.columns:
-    auto_revenue  = int(df[df["mode"] == "AUTO"]["total_fare"].sum())
-    metro_revenue = int(df[df["mode"] == "METRO"]["total_fare"].sum())
-else:
-    auto_revenue  = df[df["mode"] == "AUTO"].shape[0]  * 50 if not df.empty else 0
-    metro_revenue = df[df["mode"] == "METRO"].shape[0] * 40 if not df.empty else 0
-
-total_econ = auto_revenue + metro_revenue
-gig_split  = int((auto_revenue / total_econ) * 100) if total_econ > 0 else 50
+    for m in rev.keys():
+        rev[m] = int(df[df["mode"] == m]["total_fare"].sum())
+        
+total_econ = sum(rev.values())
 
 # ══════════════════════════════════════════════════════════════════════════════
 # HEADER + CONTROLS
@@ -391,7 +403,7 @@ title_col, ctrl_col = st.columns([5, 2])
 with title_col:
     st.markdown(
         '<div class="dashboard-title">🚦 TransitOS Smart Traffic</div>'
-        '<div class="dashboard-subtitle">Real-Time Urban Mobility Intelligence · Mumbai Metropolitan Region</div>',
+        '<div class="dashboard-subtitle">Multi-Modal Telemetry Engine · MMR</div>',
         unsafe_allow_html=True,
     )
 
@@ -408,31 +420,30 @@ c1, c2, c3, c4 = st.columns(4)
 c1.metric("Confirmed Trips",  f"{global_stats['total_tickets']:,}",           delta="Live")
 c2.metric("Revenue (INR)",    f"₹{global_stats['total_revenue_inr']:,}",      delta="Verified")
 c3.metric("Unique Nodes",     f"{global_stats['unique_commuters']:,}")
-c4.metric("Network Load",     f"{congestion_pct}%",
-          delta="Nominal" if congestion_pct < 80 else "High")
+c4.metric("Network Load",     f"{congestion_pct}%", delta="Nominal" if congestion_pct < 80 else "High")
 
-# ── KPI ROW 2: economic / mode split ──────────────────────────────────────────
+# ── KPI ROW 2: 4-MODE ECONOMIC SPLIT ──────────────────────────────────────────
 st.markdown(f"""
 <div class="kpi-row">
-    <div class="kpi-card auto-card">
-        <div class="kpi-label">🚗 Gig Worker Earnings</div>
-        <div class="kpi-value auto-val">₹{auto_revenue:,}</div>
-        <div class="kpi-sub">AUTO mode · {df[df['mode']=='AUTO'].shape[0] if not df.empty else 0} trips</div>
+    <div class="kpi-card train-card">
+        <div class="kpi-label">🚆 Suburban Rail</div>
+        <div class="kpi-value train-val">₹{rev['TRAIN']:,}</div>
+        <div class="kpi-sub">TRAIN · {df[df['mode']=='TRAIN'].shape[0] if not df.empty else 0} trips</div>
     </div>
     <div class="kpi-card metro-card">
-        <div class="kpi-label">🚇 Public Transit Revenue</div>
-        <div class="kpi-value metro-val">₹{metro_revenue:,}</div>
-        <div class="kpi-sub">METRO mode · {df[df['mode']=='METRO'].shape[0] if not df.empty else 0} trips</div>
+        <div class="kpi-label">🚇 Metro Rail</div>
+        <div class="kpi-value metro-val">₹{rev['METRO']:,}</div>
+        <div class="kpi-sub">METRO · {df[df['mode']=='METRO'].shape[0] if not df.empty else 0} trips</div>
     </div>
-    <div class="kpi-card split-card">
-        <div class="kpi-label">⚖ Gig vs Public Split</div>
-        <div class="kpi-value split-val">{gig_split}% Gig</div>
-        <div class="kpi-sub">{100-gig_split}% Public Transit</div>
+    <div class="kpi-card bus-card">
+        <div class="kpi-label">🚌 BEST Bus</div>
+        <div class="kpi-value bus-val">₹{rev['BUS']:,}</div>
+        <div class="kpi-sub">BUS · {df[df['mode']=='BUS'].shape[0] if not df.empty else 0} trips</div>
     </div>
-    <div class="kpi-card" style="border-color:rgba(0,255,170,0.2);">
-        <div class="kpi-label">💰 Total Settlement</div>
-        <div class="kpi-value" style="color:#00ffaa;">₹{total_econ:,}</div>
-        <div class="kpi-sub">Platform 5% → ₹{int(total_econ*0.05):,}</div>
+    <div class="kpi-card auto-card">
+        <div class="kpi-label">🚗 Auto/Gig</div>
+        <div class="kpi-value auto-val">₹{rev['AUTO']:,}</div>
+        <div class="kpi-sub">AUTO · {df[df['mode']=='AUTO'].shape[0] if not df.empty else 0} trips</div>
     </div>
 </div>
 """, unsafe_allow_html=True)
@@ -447,7 +458,6 @@ if df.empty:
 else:
     st.markdown("### Live Traffic Map")
 
-    # ── classify congestion ────────────────────────────────────────────────────
     route_keys = [OLAT, OLNG, DLAT, DLNG]
     df["_count"] = df.groupby(route_keys)[OLAT].transform("count")
     low_t  = df["_count"].quantile(0.40)
@@ -456,174 +466,74 @@ else:
         lambda c: "Clear" if c <= low_t else ("Moderate" if c <= high_t else "Heavy")
     )
 
-    # ── map controls ───────────────────────────────────────────────────────────
     ctrl_l, ctrl_r = st.columns([3, 2])
     with ctrl_l:
-        view_mode = st.radio(
-            "Map View",
-            ["All Routes", "Auto Only", "Metro Only"],
-            horizontal=True,
-        )
+        view_mode = st.radio("Map View", ["All Routes", "Public Only (Train/Metro/Bus)", "Gig Only (Auto)"], horizontal=True)
     with ctrl_r:
         tog1, tog2 = st.columns(2)
         with tog1:
             show_heatmap = st.toggle("🌡 Heatmap", value=True)
         with tog2:
-            use_osrm = st.toggle("🛣 Road Routing", value=True,
-                                 help="Fetch real road geometry from OSRM (slower, cached 5 min)")
+            use_osrm = st.toggle("🛣 Road Routing", value=True, help="Force OSRM routing for older DB entries")
 
-    # ── build paths ────────────────────────────────────────────────────────────
     if use_osrm:
-        with st.spinner("Fetching road geometry from OSRM…"):
+        with st.spinner("Extracting DB paths & fetching OSRM fallbacks…"):
             df = build_paths(df)
     else:
-        # Straight-line fallback path
-        df["path"] = df.apply(
-            lambda r: [[r[OLNG], r[OLAT]], [r[DLNG], r[DLAT]]], axis=1
-        )
+        df["path"] = df.apply(lambda r: [[r[OLNG], r[OLAT]], [r[DLNG], r[DLAT]]], axis=1)
 
-    # ── split by mode ──────────────────────────────────────────────────────────
-    df_auto  = df[df["mode"] == "AUTO"].copy()
-    df_metro = df[df["mode"] == "METRO"].copy()
-
-    # ── PathLayer builder ──────────────────────────────────────────────────────
-    def make_path_layer(data, src_color, tgt_color, width=4):
-        if data is None or data.empty:
-            return None
-        # Glow pass
-        glow = pdk.Layer(
-            "PathLayer",
-            data=data,
-            get_path="path",
-            get_color=src_color[:3] + [45],   # translucent for bloom
-            width_scale=20,
-            width_min_pixels=8,
-            pickable=False,
-        )
-        # Main crisp pass
-        line = pdk.Layer(
-            "PathLayer",
-            data=data,
-            get_path="path",
-            get_color=src_color,
-            width_scale=6,
-            width_min_pixels=width,
-            pickable=True,
-            auto_highlight=True,
-            highlight_color=[255, 255, 255, 200],
-        )
+    def make_path_layer(data, src_color, width=4):
+        if data is None or data.empty: return None, None
+        glow = pdk.Layer("PathLayer", data=data, get_path="path", get_color=src_color[:3] + [45], width_scale=20, width_min_pixels=8, pickable=False)
+        line = pdk.Layer("PathLayer", data=data, get_path="path", get_color=src_color, width_scale=6, width_min_pixels=width, pickable=True, auto_highlight=True, highlight_color=[255, 255, 255, 200])
         return glow, line
 
-    auto_glow,  auto_line  = make_path_layer(
-        df_auto,  [255, 140, 0, 220], [255, 200, 0, 240], width=3
-    ) if not df_auto.empty  else (None, None)
+    t_g, t_l = make_path_layer(df[df["mode"] == "TRAIN"], [0, 229, 255, 240], width=3)
+    m_g, m_l = make_path_layer(df[df["mode"] == "METRO"], [168, 85, 247, 240], width=3)
+    b_g, b_l = make_path_layer(df[df["mode"] == "BUS"],   [16, 185, 129, 240], width=3)
+    a_g, a_l = make_path_layer(df[df["mode"] == "AUTO"],  [255, 140, 0, 240],  width=3)
 
-    metro_glow, metro_line = make_path_layer(
-        df_metro, [0, 229, 255, 220], [0, 180, 255, 240], width=3
-    ) if not df_metro.empty else (None, None)
-
-    # ── heatmap ────────────────────────────────────────────────────────────────
     heatmap = pdk.Layer(
-        "HeatmapLayer",
-        data=df,
-        get_position=[OLNG, OLAT],
-        radius_pixels=60,
-        intensity=2.5,
-        threshold=0.05,
-        color_range=[
-            [0,   20,  60,  0  ],
-            [0,   100, 200, 60 ],
-            [0,   200, 255, 110],
-            [0,   255, 170, 160],
-            [255, 200, 0,   190],
-            [255, 60,  60,  210],
-        ],
-        aggregation="SUM",
+        "HeatmapLayer", data=df, get_position=[OLNG, OLAT], radius_pixels=60, intensity=2.5, threshold=0.05,
+        color_range=[[0,20,60,0], [0,100,200,60], [0,200,255,110], [0,255,170,160], [255,200,0,190], [255,60,60,210]], aggregation="SUM"
     )
 
-    # ── origin / destination dots ──────────────────────────────────────────────
-    origins = pdk.Layer(
-        "ScatterplotLayer",
-        data=df,
-        get_position=[OLNG, OLAT],
-        get_radius=180,
-        get_fill_color=[0, 220, 255, 240],
-        stroked=True,
-        get_line_color=[255, 255, 255, 160],
-        line_width_min_pixels=1,
-        pickable=False,
-    )
-    destinations = pdk.Layer(
-        "ScatterplotLayer",
-        data=df,
-        get_position=[DLNG, DLAT],
-        get_radius=180,
-        get_fill_color=[255, 45, 45, 240],
-        stroked=True,
-        get_line_color=[255, 255, 255, 160],
-        line_width_min_pixels=1,
-        pickable=False,
-    )
+    origins = pdk.Layer("ScatterplotLayer", data=df, get_position=[OLNG, OLAT], get_radius=180, get_fill_color=[0, 220, 255, 240], stroked=True, get_line_color=[255, 255, 255, 160], line_width_min_pixels=1, pickable=False)
+    destinations = pdk.Layer("ScatterplotLayer", data=df, get_position=[DLNG, DLAT], get_radius=180, get_fill_color=[255, 45, 45, 240], stroked=True, get_line_color=[255, 255, 255, 160], line_width_min_pixels=1, pickable=False)
 
-    # ── assemble layers based on view toggle ───────────────────────────────────
     layers = []
+    if show_heatmap: layers.append(heatmap)
 
-    if show_heatmap:
-        layers.append(heatmap)
-
-    if view_mode in ("All Routes", "Auto Only"):
-        for lyr in [auto_glow, auto_line]:
-            if lyr is not None:
-                layers.append(lyr)
-
-    if view_mode in ("All Routes", "Metro Only"):
-        for lyr in [metro_glow, metro_line]:
-            if lyr is not None:
-                layers.append(lyr)
+    if view_mode in ("All Routes", "Gig Only (Auto)"):
+        layers.extend([l for l in [a_g, a_l] if l is not None])
+    if view_mode in ("All Routes", "Public Only (Train/Metro/Bus)"):
+        layers.extend([l for l in [t_g, t_l, m_g, m_l, b_g, b_l] if l is not None])
 
     layers += [origins, destinations]
-    layers = [lyr for lyr in layers if lyr is not None]
 
-    # ── deck ───────────────────────────────────────────────────────────────────
     deck = pdk.Deck(
         layers=layers,
-        initial_view_state=pdk.ViewState(
-            latitude=19.0760, longitude=72.8777,
-            zoom=11, pitch=45, bearing=0,
-        ),
+        initial_view_state=pdk.ViewState(latitude=19.0760, longitude=72.8777, zoom=11, pitch=45, bearing=0),
         map_style="https://basemaps.cartocdn.com/gl/dark-matter-gl-style/style.json",
         tooltip={
             "html": (
-                "<div style='font-family:Share Tech Mono,monospace;font-size:11px;"
-                "background:#0a0f1e;border:1px solid rgba(0,255,170,0.25);"
-                "padding:10px 14px;border-radius:8px;color:#e2e8f0;line-height:2'>"
-                "📍 <span style='color:#00dcff'>Origin</span><br>"
-                "<b>{start_station}</b><br>"
-                "🎯 <span style='color:#ff2d2d'>Destination</span><br>"
-                "<b>{end_station}</b><br>"
-                "🚗 Mode: <b>{mode}</b><br>"
-                "🚦 Status: <b>{_status}</b>"
+                "<div style='font-family:Share Tech Mono,monospace;font-size:11px;background:#0a0f1e;border:1px solid rgba(0,255,170,0.25);padding:10px 14px;border-radius:8px;color:#e2e8f0;line-height:2'>"
+                "📍 <span style='color:#00dcff'>Origin</span><br><b>{start_station}</b><br>"
+                "🎯 <span style='color:#ff2d2d'>Destination</span><br><b>{end_station}</b><br>"
+                "🚗 Mode: <b>{mode}</b><br>🚦 Status: <b>{_status}</b>"
                 "</div>"
             ),
             "style": {"background": "transparent", "border": "none"},
         },
     )
 
-    # ── legend ─────────────────────────────────────────────────────────────────
-    osrm_label = (
-        '<span class="osrm-badge"><span class="osrm-dot"></span>OSRM Road Routing Active</span>'
-        if use_osrm else ""
-    )
+    osrm_label = '<span class="osrm-badge"><span class="osrm-dot"></span>OSRM Road Routing Active</span>' if use_osrm else ""
     st.markdown(f"""
         <div class="legend-row">
-            <span>
-                <span class="legend-line" style="background:linear-gradient(90deg,#FF8C00,#ffd000)"></span>
-                Auto / Gig
-            </span>
-            <span>
-                <span class="legend-line" style="background:linear-gradient(90deg,#00E5FF,#00aaff)"></span>
-                Metro / Public
-            </span>
+            <span><span class="legend-line" style="background:#00E5FF"></span>Train</span>
+            <span><span class="legend-line" style="background:#a855f7"></span>Metro</span>
+            <span><span class="legend-line" style="background:#10b981"></span>Bus</span>
+            <span><span class="legend-line" style="background:#FF8C00"></span>Auto/Gig</span>
             &nbsp;·&nbsp;
             <span><span class="legend-dot" style="background:#00dcff;outline:2px solid #fff;outline-offset:1px"></span>Origin</span>
             <span><span class="legend-dot" style="background:#ff2d2d;outline:2px solid #fff;outline-offset:1px"></span>Destination</span>
@@ -636,7 +546,7 @@ else:
     st.markdown('</div>', unsafe_allow_html=True)
 
 # ══════════════════════════════════════════════════════════════════════════════
-# CHART + TABLE
+# RESTORED: CHART + TABLE
 # ══════════════════════════════════════════════════════════════════════════════
 if not df.empty:
     st.markdown("---")
@@ -645,107 +555,50 @@ if not df.empty:
     with col_chart:
         st.markdown("### Traffic Activity Over Time")
 
-        traffic_counts = (
-            df.reset_index(drop=True)
-            .assign(Interval=lambda x: x.index // 10)
-            .groupby("Interval")
-            .size()
-            .reset_index(name="Events")
-        )
+        traffic_counts = df.reset_index(drop=True).assign(Interval=lambda x: x.index // 10).groupby("Interval").size().reset_index(name="Events")
 
-        # mode-split area traces
-        auto_counts = (
-            df[df["mode"] == "AUTO"].reset_index(drop=True)
-            .assign(Interval=lambda x: x.index // 10)
-            .groupby("Interval").size().reset_index(name="Events")
-        )
-        metro_counts = (
-            df[df["mode"] == "METRO"].reset_index(drop=True)
-            .assign(Interval=lambda x: x.index // 10)
-            .groupby("Interval").size().reset_index(name="Events")
-        )
+        def get_mode_counts(mode_name):
+            return df[df["mode"] == mode_name].reset_index(drop=True).assign(Interval=lambda x: x.index // 10).groupby("Interval").size().reset_index(name="Events")
 
         fig = go.Figure()
 
-        # Auto trace (orange)
-        fig.add_trace(go.Scatter(
-            x=auto_counts["Interval"],
-            y=auto_counts["Events"],
-            mode="lines",
-            name="Auto",
-            line=dict(color="#FF8C00", width=2, shape="spline", smoothing=1.2),
-            fill="tozeroy",
-            fillcolor="rgba(255,140,0,0.07)",
-            hovertemplate="<b>Auto · Interval %{x}</b><br>Events: %{y}<extra></extra>",
-        ))
+        # Helper to add Plotly traces
+        def add_wave_trace(data, name, hex_color, rgb_fill):
+            if not data.empty:
+                fig.add_trace(go.Scatter(
+                    x=data["Interval"], y=data["Events"], mode="lines", name=name,
+                    line=dict(color=hex_color, width=2, shape="spline", smoothing=1.2),
+                    fill="tozeroy", fillcolor=rgb_fill,
+                    hovertemplate=f"<b>{name} · Interval %{{x}}</b><br>Events: %{{y}}<extra></extra>",
+                ))
 
-        # Metro trace (cyan)
-        fig.add_trace(go.Scatter(
-            x=metro_counts["Interval"],
-            y=metro_counts["Events"],
-            mode="lines",
-            name="Metro",
-            line=dict(color="#00E5FF", width=2, shape="spline", smoothing=1.2),
-            fill="tozeroy",
-            fillcolor="rgba(0,229,255,0.07)",
-            hovertemplate="<b>Metro · Interval %{x}</b><br>Events: %{y}<extra></extra>",
-        ))
+        add_wave_trace(get_mode_counts("TRAIN"), "Train", "#00E5FF", "rgba(0,229,255,0.07)")
+        add_wave_trace(get_mode_counts("METRO"), "Metro", "#a855f7", "rgba(168,85,247,0.07)")
+        add_wave_trace(get_mode_counts("BUS"),   "Bus",   "#10b981", "rgba(16,185,129,0.07)")
+        add_wave_trace(get_mode_counts("AUTO"),  "Auto",  "#FF8C00", "rgba(255,140,0,0.07)")
 
         # Peak dots
         fig.add_trace(go.Scatter(
-            x=traffic_counts["Interval"],
-            y=traffic_counts["Events"],
-            mode="markers",
-            marker=dict(color="#ff2d2d", size=4, opacity=0.75,
-                        line=dict(color="#ff8080", width=1)),
-            hoverinfo="skip",
-            showlegend=False,
+            x=traffic_counts["Interval"], y=traffic_counts["Events"], mode="markers",
+            marker=dict(color="#ff2d2d", size=4, opacity=0.75, line=dict(color="#ff8080", width=1)),
+            hoverinfo="skip", showlegend=False,
         ))
 
         fig.update_layout(
-            paper_bgcolor="rgba(0,0,0,0)",
-            plot_bgcolor="rgba(0,0,0,0)",
-            margin=dict(l=10, r=10, t=10, b=10),
-            height=270,
-            showlegend=True,
-            legend=dict(
-                font=dict(family="Share Tech Mono", size=9, color="#64748b"),
-                bgcolor="rgba(0,0,0,0)",
-                x=1, xanchor="right", y=1,
-            ),
-            xaxis=dict(
-                showgrid=True, gridcolor="rgba(255,255,255,0.04)",
-                tickfont=dict(family="Share Tech Mono", size=10, color="#475569"),
-                zeroline=False, showline=False, title=None,
-            ),
-            yaxis=dict(
-                showgrid=True, gridcolor="rgba(255,255,255,0.04)",
-                tickfont=dict(family="Share Tech Mono", size=10, color="#475569"),
-                zeroline=False, showline=False, title=None,
-            ),
-            hoverlabel=dict(
-                bgcolor="#0a0f1e",
-                bordercolor="#00cfff",
-                font=dict(family="Share Tech Mono", size=11, color="#00cfff"),
-            ),
+            paper_bgcolor="rgba(0,0,0,0)", plot_bgcolor="rgba(0,0,0,0)",
+            margin=dict(l=10, r=10, t=10, b=10), height=270, showlegend=True,
+            legend=dict(font=dict(family="Share Tech Mono", size=9, color="#64748b"), bgcolor="rgba(0,0,0,0)", x=1, xanchor="right", y=1),
+            xaxis=dict(showgrid=True, gridcolor="rgba(255,255,255,0.04)", tickfont=dict(family="Share Tech Mono", size=10, color="#475569"), zeroline=False, showline=False, title=None),
+            yaxis=dict(showgrid=True, gridcolor="rgba(255,255,255,0.04)", tickfont=dict(family="Share Tech Mono", size=10, color="#475569"), zeroline=False, showline=False, title=None),
+            hoverlabel=dict(bgcolor="#0a0f1e", bordercolor="#00cfff", font=dict(family="Share Tech Mono", size=11, color="#00cfff")),
         )
         st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False})
 
     with col_table:
         st.markdown("### Recent Trips")
         show_cols = [c for c in ["start_station", "end_station", "mode", "total_fare", "_status"] if c in df.columns]
-        rename_map = {
-            "start_station": "Origin",
-            "end_station":   "Destination",
-            "mode":          "Mode",
-            "total_fare":    "Fare (₹)",
-            "_status":       "Status",
-        }
-        st.dataframe(
-            df[show_cols].rename(columns=rename_map).tail(12).reset_index(drop=True),
-            use_container_width=True,
-            height=290,
-        )
+        rename_map = {"start_station": "Origin", "end_station": "Destination", "mode": "Mode", "total_fare": "Fare (₹)", "_status": "Status"}
+        st.dataframe(df[show_cols].rename(columns=rename_map).tail(12).reset_index(drop=True), use_container_width=True, height=290)
 
 # ══════════════════════════════════════════════════════════════════════════════
 # EMERGENCY RESET & AUTO-REFRESH
