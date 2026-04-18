@@ -346,38 +346,33 @@ export function minifyMultiLegPayload(ticketData) {
  * Private: Fare * Ceil(Passengers / Capacity)
  */
 export function calculateMultiLegFare(legs, passengerData) {
-  const totalPassengers = (passengerData?.adults || 1) + (passengerData?.children || 0);
-  
-  const CAPACITIES = {
-    'auto': 3,
-    'taxi': 4,
-    'cab': 4,
-    'bike': 1
-  };
+  const adultCount = passengerData?.adults || 1
+  const childSeatCount = passengerData?.childrenWithSeats || 0
+  const totalHumans = adultCount + childSeatCount + (passengerData?.children || 0)
 
-  let total = 0;
-  
+  let total = 0
   for (const leg of legs) {
-    const baseFare = leg.estimatedFare || 0;
-    const mode = leg.mode.toLowerCase();
-
-    // Check if it's a private mode
-    const capacity = CAPACITIES[Object.keys(CAPACITIES).find(k => mode.includes(k))];
-
-    if (capacity) {
-      // 🚕 PRIVATE LOGIC: Charge per vehicle needed
-      const vehiclesNeeded = Math.ceil(totalPassengers / capacity);
-      total += baseFare * vehiclesNeeded;
-    } else {
-      // 🚆 PUBLIC LOGIC: Charge per head (Train/Metro/Bus)
-      // Note: children usually pay 0.5 but for the hackathon 1:1 is fine
-      total += baseFare * totalPassengers;
+    const mode = (leg.mode || '').toLowerCase()
+    
+    // 🚕 PRIVATE LOGIC: Charge per vehicle needed
+    if (mode.includes('auto') || mode.includes('taxi') || mode.includes('bike')) {
+        const capacity = mode.includes('auto') ? 3 : (mode.includes('bike') ? 1 : 4)
+        const vehicles = Math.ceil(Math.max(1, totalHumans) / capacity)
+        const base = leg.estimatedFare || 45 // Fallback if OSRM is slow
+        total += base * vehicles
+        continue
     }
-  }
-  
-  return Math.round(total);
-}
 
+    // 🚆 PUBLIC LOGIC: Charge per head
+    let base = leg.estimatedFare || 15
+    if (mode.includes('metro')) base = 20
+    else if (mode.includes('bus')) base = 10
+    else if (mode.includes('train') || mode.includes('rail')) base = 15
+
+    total += base * adultCount + base * 0.5 * childSeatCount
+  }
+  return Math.round(total * 100) / 100
+}
 /**
  * Check if any leg in a multi-leg trip is a private/gig mode
  */
