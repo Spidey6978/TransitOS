@@ -106,14 +106,14 @@ class TransitFareOracle:
 
         transit_os_cut = total_fare * 0.05
         operators_array = [leg["wallet"] for leg in leg_fares]
-        amounts_array_wei = [int((leg["gross_fare"] * 0.95) * 10**18) for leg in leg_fares]
+        amounts_array_wei = [int((leg["gross_fare"] * 0.95) * 10**10) for leg in leg_fares]
 
         return {
             "total_escrow": total_fare,
             "transit_os_revenue_inr": transit_os_cut,
             "contract_operators": operators_array,
             "contract_amounts": amounts_array_wei,
-            "total_fare_wei": int(total_fare * 10**18)
+            "total_fare_wei": int(total_fare * 10**10)
         }
 
     def calculate_settlement_payload(self, trip_legs: list, adults: int = 1, children: int = 0) -> dict:

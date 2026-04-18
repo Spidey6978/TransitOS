@@ -374,8 +374,8 @@ def book_private_legs(request: BookPrivateLegsRequest):
             
             # The 0x000 Placeholder Wallet!
             operators_array = ["0x0000000000000000000000000000000000000000"]
-            amounts_array_wei = [int(net_payout * 10**18)]
-            total_fare_wei = int(gross_fare * 10**18)
+            amounts_array_wei = [int(net_payout * 10**10)]
+            total_fare_wei = int(gross_fare * 10**10)
             
             split_info = _format_split_for_dashboard(operators_array, amounts_array_wei)
             
