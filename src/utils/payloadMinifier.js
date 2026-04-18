@@ -340,16 +340,42 @@ export function minifyMultiLegPayload(ticketData) {
  * Private legs: use osrm-based estimate passed in
  * Public legs: use fare from route selection
  */
+/**
+ * V4.1: Capacity-Aware Fare Estimator
+ * Public: Fare * Passengers
+ * Private: Fare * Ceil(Passengers / Capacity)
+ */
 export function calculateMultiLegFare(legs, passengerData) {
-  const adultCount = passengerData?.adults || 1
-  const childSeatCount = passengerData?.childrenWithSeats || 0
+  const totalPassengers = (passengerData?.adults || 1) + (passengerData?.children || 0);
+  
+  const CAPACITIES = {
+    'auto': 3,
+    'taxi': 4,
+    'cab': 4,
+    'bike': 1
+  };
 
-  let total = 0
+  let total = 0;
+  
   for (const leg of legs) {
-    const base = leg.estimatedFare || 0
-    total += base * adultCount + base * 0.5 * childSeatCount
+    const baseFare = leg.estimatedFare || 0;
+    const mode = leg.mode.toLowerCase();
+
+    // Check if it's a private mode
+    const capacity = CAPACITIES[Object.keys(CAPACITIES).find(k => mode.includes(k))];
+
+    if (capacity) {
+      // 🚕 PRIVATE LOGIC: Charge per vehicle needed
+      const vehiclesNeeded = Math.ceil(totalPassengers / capacity);
+      total += baseFare * vehiclesNeeded;
+    } else {
+      // 🚆 PUBLIC LOGIC: Charge per head (Train/Metro/Bus)
+      // Note: children usually pay 0.5 but for the hackathon 1:1 is fine
+      total += baseFare * totalPassengers;
+    }
   }
-  return Math.round(total * 100) / 100
+  
+  return Math.round(total);
 }
 
 /**
