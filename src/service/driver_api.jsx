@@ -48,5 +48,3 @@ export const withdrawFiat = async (amount) => {
   const response = await driverApi.post('/withdraw_fiat', body)
   return response.data
 }
-
-export default driverApi
