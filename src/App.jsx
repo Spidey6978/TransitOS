@@ -14,7 +14,6 @@ import BookTrip from "./pages/Booktrip/booktrip"
 import Wallets from "./pages/Wallets/wallets"
 import QRValidator from "./pages/QRValidator/validator"
 import TrafficMap from "./pages/TrafficMap/trafficmap"
-import ActiveTrip from "./pages/Driver/ActiveTrip"
 
 // ... (imports remain the same)
 
@@ -59,13 +58,6 @@ export default function App() {
           ) : (
             <ConductorLayout><QRValidator /></ConductorLayout>
           )}
-        </AuthGuard>
-      }/>
-
-      {/* Driver Routes */}
-      <Route path="/driver/active" element={
-        <AuthGuard roles={["driver"]}>
-          <DriverLayout><ActiveTrip /></DriverLayout>
         </AuthGuard>
       }/>
       
