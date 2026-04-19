@@ -92,7 +92,15 @@ function ModeBadge({ mode }) {
 }
 
 // ─── Ledger Row ───────────────────────────────────────────────────────────────
-const tdStyle = { padding: "8px 12px", fontSize: 12, color: "#CBD5E1", borderBottom: "1px solid #1E3A5F" };
+const tdStyle = {
+  padding: "8px 12px",
+  fontSize: 12,
+  color: "#CBD5E1",
+  borderBottom: "1px solid #1E3A5F",
+  whiteSpace: "normal",
+  wordBreak: "break-word",
+  overflowWrap: "break-word",
+};
 
 function LedgerRow({ ticket, index }) {
   return (
@@ -104,9 +112,8 @@ function LedgerRow({ ticket, index }) {
         {" → "}
         <span style={{ color: "#94A3B8", fontSize: 11 }}>{ticket.end_station}</span>
       </td>
-      <td style={tdStyle}><ModeBadge mode={ticket.mode} /></td>
       <td style={{ ...tdStyle, color: "#4ADE80", fontFamily: "monospace" }}>₹{ticket.total_fare}</td>
-      <td style={{ ...tdStyle, color: "#4A7FA5", fontSize: 11, maxWidth: 180, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{ticket.operator_split}</td>
+      <td style={{ ...tdStyle, color: "#4A7FA5", fontSize: 11, maxWidth: 320, overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "normal", wordBreak: "break-word", overflowWrap: "break-word" }}>{ticket.operator_split}</td>
     </tr>
   );
 }
@@ -310,11 +317,18 @@ export default function TransitOSDashboard() {
                 No transactions yet — toggle LIVE SIM or check backend connection
               </div>
             ) : (
-              <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12 }}>
+              <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 12, tableLayout: "fixed", wordBreak: "break-word" }}>
+                <colgroup>
+                  <col style={{ width: "15%" }} />
+                  <col style={{ width: "18%" }} />
+                  <col style={{ width: "22%" }} />
+                  <col style={{ width: "12%" }} />
+                  <col style={{ width: "33%" }} />
+                </colgroup>
                 <thead>
                   <tr style={{ background: "#0A1628" }}>
-                    {["TX HASH","COMMUTER","ROUTE","MODE","FARE","SPLIT"].map(h => (
-                      <th key={h} style={{ padding: "8px 12px", textAlign: "left", fontSize: 10, color: "#4A7FA5", letterSpacing: "0.1em", fontWeight: 600, borderBottom: "1px solid #1E3A5F" }}>
+                    {["TX HASH","COMMUTER","ROUTE","FARE","SPLIT"].map(h => (
+                      <th key={h} style={{ padding: "8px 12px", textAlign: "left", fontSize: 10, color: "#4A7FA5", letterSpacing: "0.1em", fontWeight: 600, borderBottom: "1px solid #1E3A5F", whiteSpace: "normal", wordBreak: "break-word", overflowWrap: "break-word" }}>
                         {h}
                       </th>
                     ))}
