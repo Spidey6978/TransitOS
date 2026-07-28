@@ -1,5 +1,10 @@
-
+# Dependencies
 node_modules/
+dist/
+dist-ssr/
+*.local
+
+# Web3 / Hardhat
 artifacts/
 cache/
 typechain-types/
@@ -7,34 +12,40 @@ TransitOS-Web3/typechain-types/
 TransitOS-Web3/artifacts/
 TransitOS-Web3/cache/
 
-
+# Python
 .venv/
-pycache/
-*.pyc
-.pytest_cache/
-
-
-*.db
-transit_ledger.db
-
-
-.env
-.env.*
-!.env.example
-# Secrets - NEVER commit these
-.env
-
-# Database (local only, don't push)
-*.db
-
-# Python cache
+venv/
 __pycache__/
 *.pyc
 *.pyo
-venv/
-.venv/
+.pytest_cache/
 
-# IDE
+# Databases
+*.db
+transit_ledger.db
+
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Environment & Secrets
+.env
+.env.*
+!.env.example
+
+# IDE & System files
 .vscode/
+!.vscode/extensions.json
 .idea/
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
 /voicelines
