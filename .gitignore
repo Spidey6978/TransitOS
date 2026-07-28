@@ -37,3 +37,4 @@ venv/
 # IDE
 .vscode/
 .idea/
+/voicelines

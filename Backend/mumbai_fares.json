@@ -1,0 +1,1214 @@
+{
+    "train": {
+        "CHURCHGATE-MARINE LINES": {
+            "2nd": 5,
+            "1st": 50,
+            "AC": 65,
+            "operator": "Indian Railways"
+        },
+        "CHARNI ROAD-CHURCHGATE": {
+            "2nd": 5,
+            "1st": 50,
+            "AC": 65,
+            "operator": "Indian Railways"
+        },
+        "CHURCHGATE-GRANT ROAD": {
+            "2nd": 5,
+            "1st": 50,
+            "AC": 65,
+            "operator": "Indian Railways"
+        },
+        "CHURCHGATE-MUMBAI CENTRAL": {
+            "2nd": 5,
+            "1st": 50,
+            "AC": 65,
+            "operator": "Indian Railways"
+        },
+        "CHURCHGATE-DADAR (WESTERN)": {
+            "2nd": 5,
+            "1st": 50,
+            "AC": 65,
+            "operator": "Indian Railways"
+        },
+        "BANDRA-CHURCHGATE": {
+            "2nd": 10,
+            "1st": 75,
+            "AC": 100,
+            "operator": "Indian Railways"
+        },
+        "ANDHERI-CHURCHGATE": {
+            "2nd": 10,
+            "1st": 105,
+            "AC": 135,
+            "operator": "Indian Railways"
+        },
+        "BORIVALI-CHURCHGATE": {
+            "2nd": 15,
+            "1st": 140,
+            "AC": 180,
+            "operator": "Indian Railways"
+        },
+        "CHURCHGATE-DAHISAR": {
+            "2nd": 15,
+            "1st": 140,
+            "AC": 180,
+            "operator": "Indian Railways"
+        },
+        "CHURCHGATE-VIRAR": {
+            "2nd": 20,
+            "1st": 190,
+            "AC": 235,
+            "operator": "Indian Railways"
+        },
+        "CHARNI ROAD-MARINE LINES": {
+            "2nd": 5,
+            "1st": 50,
+            "AC": 65,
+            "operator": "Indian Railways"
+        },
+        "GRANT ROAD-MARINE LINES": {
+            "2nd": 5,
+            "1st": 50,
+            "AC": 65,
+            "operator": "Indian Railways"
+        },
+        "MARINE LINES-MUMBAI CENTRAL": {
+            "2nd": 5,
+            "1st": 50,
+            "AC": 65,
+            "operator": "Indian Railways"
+        },
+        "DADAR (WESTERN)-MARINE LINES": {
+            "2nd": 5,
+            "1st": 50,
+            "AC": 65,
+            "operator": "Indian Railways"
+        },
+        "BANDRA-MARINE LINES": {
+            "2nd": 10,
+            "1st": 75,
+            "AC": 100,
+            "operator": "Indian Railways"
+        },
+        "ANDHERI-MARINE LINES": {
+            "2nd": 10,
+            "1st": 105,
+            "AC": 135,
+            "operator": "Indian Railways"
+        },
+        "BORIVALI-MARINE LINES": {
+            "2nd": 15,
+            "1st": 140,
+            "AC": 180,
+            "operator": "Indian Railways"
+        },
+        "DAHISAR-MARINE LINES": {
+            "2nd": 15,
+            "1st": 140,
+            "AC": 180,
+            "operator": "Indian Railways"
+        },
+        "MARINE LINES-VIRAR": {
+            "2nd": 20,
+            "1st": 190,
+            "AC": 235,
+            "operator": "Indian Railways"
+        },
+        "CHARNI ROAD-GRANT ROAD": {
+            "2nd": 5,
+            "1st": 50,
+            "AC": 65,
+            "operator": "Indian Railways"
+        },
+        "CHARNI ROAD-MUMBAI CENTRAL": {
+            "2nd": 5,
+            "1st": 50,
+            "AC": 65,
+            "operator": "Indian Railways"
+        },
+        "CHARNI ROAD-DADAR (WESTERN)": {
+            "2nd": 5,
+            "1st": 50,
+            "AC": 65,
+            "operator": "Indian Railways"
+        },
+        "BANDRA-CHARNI ROAD": {
+            "2nd": 10,
+            "1st": 75,
+            "AC": 100,
+            "operator": "Indian Railways"
+        },
+        "ANDHERI-CHARNI ROAD": {
+            "2nd": 10,
+            "1st": 75,
+            "AC": 100,
+            "operator": "Indian Railways"
+        },
+        "BORIVALI-CHARNI ROAD": {
+            "2nd": 15,
+            "1st": 140,
+            "AC": 180,
+            "operator": "Indian Railways"
+        },
+        "CHARNI ROAD-DAHISAR": {
+            "2nd": 15,
+            "1st": 140,
+            "AC": 180,
+            "operator": "Indian Railways"
+        },
+        "CHARNI ROAD-VIRAR": {
+            "2nd": 20,
+            "1st": 190,
+            "AC": 235,
+            "operator": "Indian Railways"
+        },
+        "GRANT ROAD-MUMBAI CENTRAL": {
+            "2nd": 5,
+            "1st": 50,
+            "AC": 65,
+            "operator": "Indian Railways"
+        },
+        "DADAR (WESTERN)-GRANT ROAD": {
+            "2nd": 5,
+            "1st": 50,
+            "AC": 65,
+            "operator": "Indian Railways"
+        },
+        "BANDRA-GRANT ROAD": {
+            "2nd": 10,
+            "1st": 75,
+            "AC": 100,
+            "operator": "Indian Railways"
+        },
+        "ANDHERI-GRANT ROAD": {
+            "2nd": 10,
+            "1st": 75,
+            "AC": 100,
+            "operator": "Indian Railways"
+        },
+        "BORIVALI-GRANT ROAD": {
+            "2nd": 15,
+            "1st": 140,
+            "AC": 180,
+            "operator": "Indian Railways"
+        },
+        "DAHISAR-GRANT ROAD": {
+            "2nd": 15,
+            "1st": 140,
+            "AC": 180,
+            "operator": "Indian Railways"
+        },
+        "GRANT ROAD-VIRAR": {
+            "2nd": 20,
+            "1st": 190,
+            "AC": 235,
+            "operator": "Indian Railways"
+        },
+        "DADAR (WESTERN)-MUMBAI CENTRAL": {
+            "2nd": 5,
+            "1st": 50,
+            "AC": 65,
+            "operator": "Indian Railways"
+        },
+        "BANDRA-MUMBAI CENTRAL": {
+            "2nd": 5,
+            "1st": 50,
+            "AC": 65,
+            "operator": "Indian Railways"
+        },
+        "ANDHERI-MUMBAI CENTRAL": {
+            "2nd": 10,
+            "1st": 75,
+            "AC": 100,
+            "operator": "Indian Railways"
+        },
+        "BORIVALI-MUMBAI CENTRAL": {
+            "2nd": 10,
+            "1st": 105,
+            "AC": 135,
+            "operator": "Indian Railways"
+        },
+        "DAHISAR-MUMBAI CENTRAL": {
+            "2nd": 15,
+            "1st": 140,
+            "AC": 180,
+            "operator": "Indian Railways"
+        },
+        "MUMBAI CENTRAL-VIRAR": {
+            "2nd": 20,
+            "1st": 190,
+            "AC": 235,
+            "operator": "Indian Railways"
+        },
+        "BANDRA-DADAR (WESTERN)": {
+            "2nd": 5,
+            "1st": 50,
+            "AC": 65,
+            "operator": "Indian Railways"
+        },
+        "ANDHERI-DADAR (WESTERN)": {
+            "2nd": 10,
+            "1st": 75,
+            "AC": 100,
+            "operator": "Indian Railways"
+        },
+        "BORIVALI-DADAR (WESTERN)": {
+            "2nd": 10,
+            "1st": 105,
+            "AC": 135,
+            "operator": "Indian Railways"
+        },
+        "DADAR (WESTERN)-DAHISAR": {
+            "2nd": 15,
+            "1st": 140,
+            "AC": 180,
+            "operator": "Indian Railways"
+        },
+        "DADAR (WESTERN)-VIRAR": {
+            "2nd": 15,
+            "1st": 165,
+            "AC": 210,
+            "operator": "Indian Railways"
+        },
+        "ANDHERI-BANDRA": {
+            "2nd": 5,
+            "1st": 50,
+            "AC": 65,
+            "operator": "Indian Railways"
+        },
+        "BANDRA-BORIVALI": {
+            "2nd": 10,
+            "1st": 75,
+            "AC": 100,
+            "operator": "Indian Railways"
+        },
+        "BANDRA-DAHISAR": {
+            "2nd": 10,
+            "1st": 105,
+            "AC": 135,
+            "operator": "Indian Railways"
+        },
+        "BANDRA-VIRAR": {
+            "2nd": 15,
+            "1st": 165,
+            "AC": 210,
+            "operator": "Indian Railways"
+        },
+        "ANDHERI-BORIVALI": {
+            "2nd": 10,
+            "1st": 75,
+            "AC": 100,
+            "operator": "Indian Railways"
+        },
+        "ANDHERI-DAHISAR": {
+            "2nd": 10,
+            "1st": 75,
+            "AC": 100,
+            "operator": "Indian Railways"
+        },
+        "ANDHERI-VIRAR": {
+            "2nd": 15,
+            "1st": 140,
+            "AC": 180,
+            "operator": "Indian Railways"
+        },
+        "BORIVALI-DAHISAR": {
+            "2nd": 5,
+            "1st": 50,
+            "AC": 65,
+            "operator": "Indian Railways"
+        },
+        "BORIVALI-VIRAR": {
+            "2nd": 10,
+            "1st": 105,
+            "AC": 135,
+            "operator": "Indian Railways"
+        },
+        "DAHISAR-VIRAR": {
+            "2nd": 10,
+            "1st": 105,
+            "AC": 135,
+            "operator": "Indian Railways"
+        },
+        "BYCULLA-CST": {
+            "2nd": 5,
+            "1st": 50,
+            "AC": 65,
+            "operator": "Indian Railways"
+        },
+        "CST-DADAR (CENTRAL)": {
+            "2nd": 5,
+            "1st": 50,
+            "AC": 65,
+            "operator": "Indian Railways"
+        },
+        "CST-KURLA": {
+            "2nd": 10,
+            "1st": 75,
+            "AC": 100,
+            "operator": "Indian Railways"
+        },
+        "CST-GHATKOPAR": {
+            "2nd": 10,
+            "1st": 75,
+            "AC": 100,
+            "operator": "Indian Railways"
+        },
+        "CST-THANE": {
+            "2nd": 15,
+            "1st": 140,
+            "AC": 180,
+            "operator": "Indian Railways"
+        },
+        "CST-KALYAN": {
+            "2nd": 15,
+            "1st": 165,
+            "AC": 210,
+            "operator": "Indian Railways"
+        },
+        "BYCULLA-DADAR (CENTRAL)": {
+            "2nd": 5,
+            "1st": 50,
+            "AC": 65,
+            "operator": "Indian Railways"
+        },
+        "BYCULLA-KURLA": {
+            "2nd": 10,
+            "1st": 75,
+            "AC": 100,
+            "operator": "Indian Railways"
+        },
+        "BYCULLA-GHATKOPAR": {
+            "2nd": 10,
+            "1st": 75,
+            "AC": 100,
+            "operator": "Indian Railways"
+        },
+        "BYCULLA-THANE": {
+            "2nd": 10,
+            "1st": 105,
+            "AC": 135,
+            "operator": "Indian Railways"
+        },
+        "BYCULLA-KALYAN": {
+            "2nd": 15,
+            "1st": 165,
+            "AC": 210,
+            "operator": "Indian Railways"
+        },
+        "DADAR (CENTRAL)-KURLA": {
+            "2nd": 5,
+            "1st": 50,
+            "AC": 65,
+            "operator": "Indian Railways"
+        },
+        "DADAR (CENTRAL)-GHATKOPAR": {
+            "2nd": 10,
+            "1st": 75,
+            "AC": 100,
+            "operator": "Indian Railways"
+        },
+        "DADAR (CENTRAL)-THANE": {
+            "2nd": 10,
+            "1st": 105,
+            "AC": 135,
+            "operator": "Indian Railways"
+        },
+        "DADAR (CENTRAL)-KALYAN": {
+            "2nd": 15,
+            "1st": 165,
+            "AC": 210,
+            "operator": "Indian Railways"
+        },
+        "GHATKOPAR-KURLA": {
+            "2nd": 5,
+            "1st": 50,
+            "AC": 65,
+            "operator": "Indian Railways"
+        },
+        "KURLA-THANE": {
+            "2nd": 10,
+            "1st": 75,
+            "AC": 100,
+            "operator": "Indian Railways"
+        },
+        "KALYAN-KURLA": {
+            "2nd": 15,
+            "1st": 140,
+            "AC": 180,
+            "operator": "Indian Railways"
+        },
+        "GHATKOPAR-THANE": {
+            "2nd": 10,
+            "1st": 75,
+            "AC": 100,
+            "operator": "Indian Railways"
+        },
+        "GHATKOPAR-KALYAN": {
+            "2nd": 15,
+            "1st": 140,
+            "AC": 180,
+            "operator": "Indian Railways"
+        },
+        "KALYAN-THANE": {
+            "2nd": 10,
+            "1st": 75,
+            "AC": 100,
+            "operator": "Indian Railways"
+        },
+        "CST-VASHI": {
+            "2nd": 10,
+            "1st": 105,
+            "AC": 135,
+            "operator": "Indian Railways"
+        },
+        "CST-PANVEL": {
+            "2nd": 15,
+            "1st": 165,
+            "AC": 210,
+            "operator": "Indian Railways"
+        },
+        "KURLA-VASHI": {
+            "2nd": 10,
+            "1st": 75,
+            "AC": 100,
+            "operator": "Indian Railways"
+        },
+        "KURLA-PANVEL": {
+            "2nd": 15,
+            "1st": 140,
+            "AC": 180,
+            "operator": "Indian Railways"
+        },
+        "PANVEL-VASHI": {
+            "2nd": 10,
+            "1st": 75,
+            "AC": 100,
+            "operator": "Indian Railways"
+        },
+        "CST-CHURCHGATE": {
+            "2nd": 5,
+            "1st": 50,
+            "AC": 65,
+            "operator": "Indian Railways"
+        },
+        "BYCULLA-CHURCHGATE": {
+            "2nd": 5,
+            "1st": 50,
+            "AC": 65,
+            "operator": "Indian Railways"
+        },
+        "CHURCHGATE-DADAR (CENTRAL)": {
+            "2nd": 10,
+            "1st": 75,
+            "AC": 100,
+            "operator": "Indian Railways"
+        },
+        "CHURCHGATE-KURLA": {
+            "2nd": 10,
+            "1st": 105,
+            "AC": 135,
+            "operator": "Indian Railways"
+        },
+        "CHURCHGATE-GHATKOPAR": {
+            "2nd": 10,
+            "1st": 105,
+            "AC": 135,
+            "operator": "Indian Railways"
+        },
+        "CHURCHGATE-THANE": {
+            "2nd": 15,
+            "1st": 165,
+            "AC": 210,
+            "operator": "Indian Railways"
+        },
+        "CHURCHGATE-KALYAN": {
+            "2nd": 20,
+            "1st": 190,
+            "AC": 235,
+            "operator": "Indian Railways"
+        },
+        "CHURCHGATE-VASHI": {
+            "2nd": 15,
+            "1st": 140,
+            "AC": 180,
+            "operator": "Indian Railways"
+        },
+        "CHURCHGATE-PANVEL": {
+            "2nd": 15,
+            "1st": 140,
+            "AC": 180,
+            "operator": "Indian Railways"
+        },
+        "CST-MARINE LINES": {
+            "2nd": 5,
+            "1st": 50,
+            "AC": 65,
+            "operator": "Indian Railways"
+        },
+        "BYCULLA-MARINE LINES": {
+            "2nd": 5,
+            "1st": 50,
+            "AC": 65,
+            "operator": "Indian Railways"
+        },
+        "DADAR (CENTRAL)-MARINE LINES": {
+            "2nd": 10,
+            "1st": 75,
+            "AC": 100,
+            "operator": "Indian Railways"
+        },
+        "KURLA-MARINE LINES": {
+            "2nd": 10,
+            "1st": 75,
+            "AC": 100,
+            "operator": "Indian Railways"
+        },
+        "GHATKOPAR-MARINE LINES": {
+            "2nd": 10,
+            "1st": 105,
+            "AC": 135,
+            "operator": "Indian Railways"
+        },
+        "MARINE LINES-THANE": {
+            "2nd": 15,
+            "1st": 165,
+            "AC": 210,
+            "operator": "Indian Railways"
+        },
+        "KALYAN-MARINE LINES": {
+            "2nd": 20,
+            "1st": 190,
+            "AC": 235,
+            "operator": "Indian Railways"
+        },
+        "MARINE LINES-VASHI": {
+            "2nd": 15,
+            "1st": 140,
+            "AC": 180,
+            "operator": "Indian Railways"
+        },
+        "MARINE LINES-PANVEL": {
+            "2nd": 15,
+            "1st": 140,
+            "AC": 180,
+            "operator": "Indian Railways"
+        },
+        "CST-CHARNI ROAD": {
+            "2nd": 5,
+            "1st": 50,
+            "AC": 65,
+            "operator": "Indian Railways"
+        },
+        "BYCULLA-CHARNI ROAD": {
+            "2nd": 5,
+            "1st": 50,
+            "AC": 65,
+            "operator": "Indian Railways"
+        },
+        "CHARNI ROAD-DADAR (CENTRAL)": {
+            "2nd": 10,
+            "1st": 75,
+            "AC": 100,
+            "operator": "Indian Railways"
+        },
+        "CHARNI ROAD-KURLA": {
+            "2nd": 10,
+            "1st": 75,
+            "AC": 100,
+            "operator": "Indian Railways"
+        },
+        "CHARNI ROAD-GHATKOPAR": {
+            "2nd": 10,
+            "1st": 105,
+            "AC": 135,
+            "operator": "Indian Railways"
+        },
+        "CHARNI ROAD-THANE": {
+            "2nd": 15,
+            "1st": 165,
+            "AC": 210,
+            "operator": "Indian Railways"
+        },
+        "CHARNI ROAD-KALYAN": {
+            "2nd": 20,
+            "1st": 190,
+            "AC": 235,
+            "operator": "Indian Railways"
+        },
+        "CHARNI ROAD-VASHI": {
+            "2nd": 15,
+            "1st": 140,
+            "AC": 180,
+            "operator": "Indian Railways"
+        },
+        "CHARNI ROAD-PANVEL": {
+            "2nd": 15,
+            "1st": 165,
+            "AC": 210,
+            "operator": "Indian Railways"
+        },
+        "CST-GRANT ROAD": {
+            "2nd": 5,
+            "1st": 50,
+            "AC": 65,
+            "operator": "Indian Railways"
+        },
+        "BYCULLA-GRANT ROAD": {
+            "2nd": 5,
+            "1st": 50,
+            "AC": 65,
+            "operator": "Indian Railways"
+        },
+        "DADAR (CENTRAL)-GRANT ROAD": {
+            "2nd": 5,
+            "1st": 50,
+            "AC": 65,
+            "operator": "Indian Railways"
+        },
+        "GRANT ROAD-KURLA": {
+            "2nd": 10,
+            "1st": 75,
+            "AC": 100,
+            "operator": "Indian Railways"
+        },
+        "GHATKOPAR-GRANT ROAD": {
+            "2nd": 10,
+            "1st": 105,
+            "AC": 135,
+            "operator": "Indian Railways"
+        },
+        "GRANT ROAD-THANE": {
+            "2nd": 15,
+            "1st": 165,
+            "AC": 210,
+            "operator": "Indian Railways"
+        },
+        "GRANT ROAD-KALYAN": {
+            "2nd": 20,
+            "1st": 190,
+            "AC": 235,
+            "operator": "Indian Railways"
+        },
+        "GRANT ROAD-VASHI": {
+            "2nd": 15,
+            "1st": 140,
+            "AC": 180,
+            "operator": "Indian Railways"
+        },
+        "GRANT ROAD-PANVEL": {
+            "2nd": 15,
+            "1st": 165,
+            "AC": 210,
+            "operator": "Indian Railways"
+        },
+        "CST-MUMBAI CENTRAL": {
+            "2nd": 5,
+            "1st": 50,
+            "AC": 65,
+            "operator": "Indian Railways"
+        },
+        "BYCULLA-MUMBAI CENTRAL": {
+            "2nd": 5,
+            "1st": 50,
+            "AC": 65,
+            "operator": "Indian Railways"
+        },
+        "DADAR (CENTRAL)-MUMBAI CENTRAL": {
+            "2nd": 5,
+            "1st": 50,
+            "AC": 65,
+            "operator": "Indian Railways"
+        },
+        "KURLA-MUMBAI CENTRAL": {
+            "2nd": 10,
+            "1st": 75,
+            "AC": 100,
+            "operator": "Indian Railways"
+        },
+        "GHATKOPAR-MUMBAI CENTRAL": {
+            "2nd": 10,
+            "1st": 105,
+            "AC": 135,
+            "operator": "Indian Railways"
+        },
+        "MUMBAI CENTRAL-THANE": {
+            "2nd": 15,
+            "1st": 165,
+            "AC": 210,
+            "operator": "Indian Railways"
+        },
+        "KALYAN-MUMBAI CENTRAL": {
+            "2nd": 20,
+            "1st": 190,
+            "AC": 235,
+            "operator": "Indian Railways"
+        },
+        "MUMBAI CENTRAL-VASHI": {
+            "2nd": 10,
+            "1st": 105,
+            "AC": 135,
+            "operator": "Indian Railways"
+        },
+        "MUMBAI CENTRAL-PANVEL": {
+            "2nd": 15,
+            "1st": 165,
+            "AC": 210,
+            "operator": "Indian Railways"
+        },
+        "CST-DADAR (WESTERN)": {
+            "2nd": 10,
+            "1st": 75,
+            "AC": 100,
+            "operator": "Indian Railways"
+        },
+        "BYCULLA-DADAR (WESTERN)": {
+            "2nd": 5,
+            "1st": 50,
+            "AC": 65,
+            "operator": "Indian Railways"
+        },
+        "DADAR (CENTRAL)-DADAR (WESTERN)": {
+            "2nd": 5,
+            "1st": 50,
+            "AC": 65,
+            "operator": "Indian Railways"
+        },
+        "DADAR (WESTERN)-KURLA": {
+            "2nd": 5,
+            "1st": 50,
+            "AC": 65,
+            "operator": "Indian Railways"
+        },
+        "DADAR (WESTERN)-GHATKOPAR": {
+            "2nd": 10,
+            "1st": 75,
+            "AC": 100,
+            "operator": "Indian Railways"
+        },
+        "DADAR (WESTERN)-THANE": {
+            "2nd": 15,
+            "1st": 140,
+            "AC": 180,
+            "operator": "Indian Railways"
+        },
+        "DADAR (WESTERN)-KALYAN": {
+            "2nd": 15,
+            "1st": 165,
+            "AC": 210,
+            "operator": "Indian Railways"
+        },
+        "DADAR (WESTERN)-VASHI": {
+            "2nd": 10,
+            "1st": 105,
+            "AC": 135,
+            "operator": "Indian Railways"
+        },
+        "DADAR (WESTERN)-PANVEL": {
+            "2nd": 15,
+            "1st": 140,
+            "AC": 180,
+            "operator": "Indian Railways"
+        },
+        "BANDRA-CST": {
+            "2nd": 10,
+            "1st": 75,
+            "AC": 100,
+            "operator": "Indian Railways"
+        },
+        "BANDRA-BYCULLA": {
+            "2nd": 10,
+            "1st": 75,
+            "AC": 100,
+            "operator": "Indian Railways"
+        },
+        "BANDRA-DADAR (CENTRAL)": {
+            "2nd": 5,
+            "1st": 50,
+            "AC": 65,
+            "operator": "Indian Railways"
+        },
+        "BANDRA-KURLA": {
+            "2nd": 5,
+            "1st": 50,
+            "AC": 65,
+            "operator": "Indian Railways"
+        },
+        "BANDRA-GHATKOPAR": {
+            "2nd": 10,
+            "1st": 75,
+            "AC": 100,
+            "operator": "Indian Railways"
+        },
+        "BANDRA-THANE": {
+            "2nd": 15,
+            "1st": 140,
+            "AC": 180,
+            "operator": "Indian Railways"
+        },
+        "BANDRA-KALYAN": {
+            "2nd": 15,
+            "1st": 165,
+            "AC": 210,
+            "operator": "Indian Railways"
+        },
+        "BANDRA-VASHI": {
+            "2nd": 10,
+            "1st": 105,
+            "AC": 135,
+            "operator": "Indian Railways"
+        },
+        "BANDRA-PANVEL": {
+            "2nd": 15,
+            "1st": 140,
+            "AC": 180,
+            "operator": "Indian Railways"
+        },
+        "ANDHERI-CST": {
+            "2nd": 10,
+            "1st": 105,
+            "AC": 135,
+            "operator": "Indian Railways"
+        },
+        "ANDHERI-BYCULLA": {
+            "2nd": 10,
+            "1st": 105,
+            "AC": 135,
+            "operator": "Indian Railways"
+        },
+        "ANDHERI-DADAR (CENTRAL)": {
+            "2nd": 10,
+            "1st": 75,
+            "AC": 100,
+            "operator": "Indian Railways"
+        },
+        "ANDHERI-KURLA": {
+            "2nd": 5,
+            "1st": 50,
+            "AC": 65,
+            "operator": "Indian Railways"
+        },
+        "ANDHERI-GHATKOPAR": {
+            "2nd": 5,
+            "1st": 50,
+            "AC": 65,
+            "operator": "Indian Railways"
+        },
+        "ANDHERI-THANE": {
+            "2nd": 10,
+            "1st": 105,
+            "AC": 135,
+            "operator": "Indian Railways"
+        },
+        "ANDHERI-KALYAN": {
+            "2nd": 15,
+            "1st": 165,
+            "AC": 210,
+            "operator": "Indian Railways"
+        },
+        "ANDHERI-VASHI": {
+            "2nd": 10,
+            "1st": 75,
+            "AC": 100,
+            "operator": "Indian Railways"
+        },
+        "ANDHERI-PANVEL": {
+            "2nd": 15,
+            "1st": 140,
+            "AC": 180,
+            "operator": "Indian Railways"
+        },
+        "BORIVALI-CST": {
+            "2nd": 15,
+            "1st": 165,
+            "AC": 210,
+            "operator": "Indian Railways"
+        },
+        "BORIVALI-BYCULLA": {
+            "2nd": 15,
+            "1st": 140,
+            "AC": 180,
+            "operator": "Indian Railways"
+        },
+        "BORIVALI-DADAR (CENTRAL)": {
+            "2nd": 15,
+            "1st": 140,
+            "AC": 180,
+            "operator": "Indian Railways"
+        },
+        "BORIVALI-KURLA": {
+            "2nd": 10,
+            "1st": 105,
+            "AC": 135,
+            "operator": "Indian Railways"
+        },
+        "BORIVALI-GHATKOPAR": {
+            "2nd": 10,
+            "1st": 105,
+            "AC": 135,
+            "operator": "Indian Railways"
+        },
+        "BORIVALI-THANE": {
+            "2nd": 10,
+            "1st": 75,
+            "AC": 100,
+            "operator": "Indian Railways"
+        },
+        "BORIVALI-KALYAN": {
+            "2nd": 15,
+            "1st": 140,
+            "AC": 180,
+            "operator": "Indian Railways"
+        },
+        "BORIVALI-VASHI": {
+            "2nd": 15,
+            "1st": 140,
+            "AC": 180,
+            "operator": "Indian Railways"
+        },
+        "BORIVALI-PANVEL": {
+            "2nd": 15,
+            "1st": 165,
+            "AC": 210,
+            "operator": "Indian Railways"
+        },
+        "CST-VIRAR": {
+            "2nd": 20,
+            "1st": 190,
+            "AC": 235,
+            "operator": "Indian Railways"
+        },
+        "BYCULLA-VIRAR": {
+            "2nd": 20,
+            "1st": 190,
+            "AC": 235,
+            "operator": "Indian Railways"
+        },
+        "DADAR (CENTRAL)-VIRAR": {
+            "2nd": 20,
+            "1st": 190,
+            "AC": 235,
+            "operator": "Indian Railways"
+        },
+        "KURLA-VIRAR": {
+            "2nd": 20,
+            "1st": 190,
+            "AC": 235,
+            "operator": "Indian Railways"
+        },
+        "GHATKOPAR-VIRAR": {
+            "2nd": 20,
+            "1st": 190,
+            "AC": 235,
+            "operator": "Indian Railways"
+        },
+        "THANE-VIRAR": {
+            "2nd": 15,
+            "1st": 165,
+            "AC": 210,
+            "operator": "Indian Railways"
+        },
+        "KALYAN-VIRAR": {
+            "2nd": 15,
+            "1st": 165,
+            "AC": 210,
+            "operator": "Indian Railways"
+        },
+        "VASHI-VIRAR": {
+            "2nd": 20,
+            "1st": 190,
+            "AC": 235,
+            "operator": "Indian Railways"
+        },
+        "PANVEL-VIRAR": {
+            "2nd": 20,
+            "1st": 190,
+            "AC": 235,
+            "operator": "Indian Railways"
+        },
+        "CST-DAHISAR": {
+            "2nd": 15,
+            "1st": 165,
+            "AC": 210,
+            "operator": "Indian Railways"
+        },
+        "BYCULLA-DAHISAR": {
+            "2nd": 15,
+            "1st": 140,
+            "AC": 180,
+            "operator": "Indian Railways"
+        },
+        "DADAR (CENTRAL)-DAHISAR": {
+            "2nd": 15,
+            "1st": 140,
+            "AC": 180,
+            "operator": "Indian Railways"
+        },
+        "DAHISAR-KURLA": {
+            "2nd": 10,
+            "1st": 105,
+            "AC": 135,
+            "operator": "Indian Railways"
+        },
+        "DAHISAR-GHATKOPAR": {
+            "2nd": 10,
+            "1st": 105,
+            "AC": 135,
+            "operator": "Indian Railways"
+        },
+        "DAHISAR-THANE": {
+            "2nd": 10,
+            "1st": 75,
+            "AC": 100,
+            "operator": "Indian Railways"
+        },
+        "DAHISAR-KALYAN": {
+            "2nd": 15,
+            "1st": 140,
+            "AC": 180,
+            "operator": "Indian Railways"
+        },
+        "DAHISAR-VASHI": {
+            "2nd": 15,
+            "1st": 140,
+            "AC": 180,
+            "operator": "Indian Railways"
+        },
+        "DAHISAR-PANVEL": {
+            "2nd": 15,
+            "1st": 165,
+            "AC": 210,
+            "operator": "Indian Railways"
+        },
+        "BYCULLA-VASHI": {
+            "2nd": 10,
+            "1st": 105,
+            "AC": 135,
+            "operator": "Indian Railways"
+        },
+        "BYCULLA-PANVEL": {
+            "2nd": 15,
+            "1st": 140,
+            "AC": 180,
+            "operator": "Indian Railways"
+        },
+        "DADAR (CENTRAL)-VASHI": {
+            "2nd": 10,
+            "1st": 105,
+            "AC": 135,
+            "operator": "Indian Railways"
+        },
+        "DADAR (CENTRAL)-PANVEL": {
+            "2nd": 15,
+            "1st": 140,
+            "AC": 180,
+            "operator": "Indian Railways"
+        },
+        "GHATKOPAR-VASHI": {
+            "2nd": 10,
+            "1st": 75,
+            "AC": 100,
+            "operator": "Indian Railways"
+        },
+        "GHATKOPAR-PANVEL": {
+            "2nd": 15,
+            "1st": 140,
+            "AC": 180,
+            "operator": "Indian Railways"
+        },
+        "THANE-VASHI": {
+            "2nd": 10,
+            "1st": 105,
+            "AC": 135,
+            "operator": "Indian Railways"
+        },
+        "PANVEL-THANE": {
+            "2nd": 15,
+            "1st": 140,
+            "AC": 180,
+            "operator": "Indian Railways"
+        },
+        "KALYAN-VASHI": {
+            "2nd": 10,
+            "1st": 105,
+            "AC": 135,
+            "operator": "Indian Railways"
+        },
+        "KALYAN-PANVEL": {
+            "2nd": 15,
+            "1st": 140,
+            "AC": 180,
+            "operator": "Indian Railways"
+        }
+    },
+    "metro": {
+        "ANDHERI-VERSOVA (METRO)": {
+            "standard": 10,
+            "operator": "MMOPL (Reliance)"
+        },
+        "VERSOVA (METRO)-WEH": {
+            "standard": 20,
+            "operator": "MMOPL (Reliance)"
+        },
+        "MAROL NAKA-VERSOVA (METRO)": {
+            "standard": 20,
+            "operator": "MMOPL (Reliance)"
+        },
+        "GHATKOPAR-VERSOVA (METRO)": {
+            "standard": 20,
+            "operator": "MMOPL (Reliance)"
+        },
+        "ANDHERI-WEH": {
+            "standard": 10,
+            "operator": "MMOPL (Reliance)"
+        },
+        "ANDHERI-MAROL NAKA": {
+            "standard": 20,
+            "operator": "MMOPL (Reliance)"
+        },
+        "ANDHERI-GHATKOPAR": {
+            "standard": 20,
+            "operator": "MMOPL (Reliance)"
+        },
+        "MAROL NAKA-WEH": {
+            "standard": 10,
+            "operator": "MMOPL (Reliance)"
+        },
+        "GHATKOPAR-WEH": {
+            "standard": 20,
+            "operator": "MMOPL (Reliance)"
+        },
+        "GHATKOPAR-MAROL NAKA": {
+            "standard": 20,
+            "operator": "MMOPL (Reliance)"
+        },
+        "CHEMBUR (MONORAIL)-WADALA DEPOT": {
+            "standard": 20,
+            "operator": "MMRDA (State)"
+        }
+    },
+    "ferry": {
+        "ALIBAUG (JETTY)-GATEWAY OF INDIA (FERRY)": {
+            "standard": 200,
+            "operator": "M2M Ferries"
+        }
+    },
+    "bus": {
+        "short": {
+            "non-ac": 5,
+            "ac": 6
+        },
+        "medium": {
+            "non-ac": 10,
+            "ac": 13
+        },
+        "long": {
+            "non-ac": 15,
+            "ac": 19
+        },
+        "max": {
+            "non-ac": 20,
+            "ac": 25
+        }
+    }
+}
