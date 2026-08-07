@@ -32,28 +32,50 @@ TransitOS/
 
 ### 🎨 1. Frontend (React + Vite + Tailwind CSS)
 Located at root (`src/`, `package.json`, `vite.config.js`).
-- User ticketing portal, multi-leg route planning, conductor/driver active trip management, group ticketing, and QR validator.
+- **User Portal**: Multi-leg route planning, ticket booking, wallet management, and QR ticket rendering (`src/pages/Booktrip/`, `src/pages/Wallets/`).
+- **Driver & Conductor Portals**: Active trip management, driver earnings/withdrawals, and multi-role QR ticket validator (`src/pages/Driver/`, `src/pages/QRValidator/`).
+- **Admin Dashboard & Map**: Live traffic map and analytics (`src/pages/TrafficMap/`, `src/pages/Dashboard/`).
 
 ### ⚡ 2. Backend Engine (FastAPI & Web3 Bridge)
 Located in `Backend/`.
-- `main.py`: Core FastAPI endpoints & rate limiting.
-- `web3_bridge.py`: Interface with EVM RPC & Polygon Amoy smart contracts.
-- `osrm_routing.py`: Open Source Routing Machine integration for multi-modal pathfinding.
-- `fare_oracle.py` & `mumbai_fares.json`: Dynamic fare calculation & station distance database.
-- `qr_codec.py`: Encrypted ticket payload codec for offline operation.
+- `main.py`: Core FastAPI REST server with `slowapi` rate limiting (30 req/min).
+- `web3_bridge.py`: Interface with EVM RPC & Polygon Amoy smart contracts with a thread-safe `get_next_nonce()` Nonce Healer.
+- `osrm_routing.py`: Open Source Routing Machine integration with LRU caching for real road paths.
+- `fare_oracle.py` & `mumbai_fares.json`: Dynamic fare calculation matrix for public transit (Headcount model) & gig vehicles (Vehicle capacity model with congestion multipliers).
+- `qr_codec.py`: Minified 7-field compressed string format with tamper-detection for offline operations.
 
 ### 📜 3. Web3 Smart Contracts (Solidity + Hardhat)
 Located in `TransitOS-Web3/`.
-- `contracts/TransitSettlement.sol`: On-chain automated fare distribution, escrow, and multi-operator settlement smart contract.
-- Includes Hardhat deployment and test suites (`scripts/deploy.ts`, `test/TransitSettlement.ts`).
+- `contracts/TransitSettlement.sol`: On-chain automated fare distribution, escrow, and multi-operator settlement contract deployed on Polygon Amoy.
+- Hardhat deployment & test suite (`scripts/deploy.ts`, `test/TransitSettlement.ts`).
 
-### 📊 4. Live Command Center & Simulation
-- `LiveDashboard/dashboard.py`: Real-time 3D geospatial monitoring dashboard built with Streamlit & PyDeck.
-- `Scripts/`: Traffic simulation (`simulate_traffic.py`), refund engine simulation, balance checkers, and chaos sync utilities.
+### 📊 4. Live Command Center
+Located in `LiveDashboard/`.
+- `dashboard.py`: Real-time 3D geospatial monitoring dashboard built with Streamlit, PyDeck, and Plotly, displaying 4-mode economic revenue breakdowns (Suburban Rail, Metro, BEST Bus, Auto/Gig) and OSRM road paths.
 
 ---
 
-## 🚀 Impact & Achievements
+## 🔌 Core API Endpoints
+
+| Endpoint | Method | Description |
+|---|---|---|
+| `/health` | `GET` | Health check & system status |
+| `/stations` | `GET` | Returns list of supported Mumbai transit stations |
+| `/routes` | `GET` | Ghost-Shield protected route finder (Train, Hybrid, BEST Bus) |
+| `/book_ticket` | `POST` | Primary ticket booking endpoint with Web3 settlement & Circuit Breaker |
+| `/book_private_legs` | `POST` | Gig transit booking with `0x000...` placeholder escrow wallet |
+| `/driver_scan` | `POST` | Handshake assigning driver wallet to pending gig escrow |
+| `/driver_cancel` | `POST` | Sweeps unassigned gig escrow back to treasury for 100% commuter refund |
+| `/user_cancel` | `POST` | User cancellation applying ₹0.50 anti-griefing micro-fee |
+| `/sync_offline` | `POST` | Offline QR batch processing & Web3 synchronization |
+| `/validate_ticket` | `POST` | Ticket validation against local SQLite ledger |
+| `/ledger_live` | `GET` | Live ledger feed for dashboard telemetry |
+| `/stats` | `GET` | Network totals (tickets, revenue, unique commuters) |
+| `/driver_wallet` & `/withdraw_fiat` | `GET/POST` | Driver earnings & IMPS off-ramp interface |
+
+---
+
+## 🚀 Impact & Key Features
 
 - **Instant On-Chain Settlement**: Eliminated inter-operator revenue reconciliation delays from days to T+0 by deploying a Solidity smart contract on Polygon Amoy that atomically distributes dynamic `address[]` operator splits in a single transaction.
 - **Idempotency Shield**: Prevented 100% of replay attack attempts by implementing a UUID idempotency shield that queries SQLite before touching the fare oracle or blockchain, returning `409 Conflict` on duplicate ticket IDs.
@@ -68,19 +90,29 @@ Located in `TransitOS-Web3/`.
 
 `TransitSettlement.sol` deployed on Polygon Amoy L2.
 
-- `settleTrip(commuterName, address[] operators, uint256[] amounts, uint256 totalFare)` — distributes dynamic operator splits atomically. On-chain guards verify array lengths match and total payouts do not exceed total fare.
+- `settleTrip(commuterName, address[] operators, uint256[] amounts, uint256 totalFare)` — distributes dynamic operator splits atomically. On-chain guards verify array lengths match and total payouts + 5% platform fee do not exceed total fare.
 - `reclaimPendingEscrow(uint256 amountWei)` — owner-only sweep of unassigned gig escrow back to treasury wallet.
 - `operatorBalances(address)` — public view for per-operator balance queries.
 
 ---
 
-## ⚡ Chaos Engineering
+## ⚡ Scripts & Chaos Engineering
 
-Three active attack scripts validate the security shields:
+Located in `Scripts/`:
 
-- `Scripts/chaos_ghost.py` — injects fake station coordinates to verify Ghost Shield returns 400 Bad Request.
-- `Scripts/chaos_repeat.py` — spams identical ticket UUIDs to verify Idempotency Shield returns 409 Conflict.
+### Chaos Testing Suite
+- `Scripts/chaos_ghost.py` — injects fake station coordinates to verify Ghost Shield returns `400 Bad Request`.
+- `Scripts/chaos_repeat.py` — spams identical ticket UUIDs to verify Idempotency Shield returns `409 Conflict`.
 - `Scripts/chaos_sync.py` — fires 10 concurrent offline QR batches to stress-test the Nonce Healer and batch sync pipeline.
+
+### Simulation & Utilities
+- `Scripts/simulate_traffic.py` — simulates live multi-modal commuter ticket requests to feed telemetry.
+- `Scripts/simulate_refund.py` — tests gig transit cancellation & refund flows.
+- `Scripts/test_v2_engine.py` — end-to-end test suite for backend route calculation & Web3 settlement.
+- `Scripts/check_balances.py` — checks Web3 operator wallet balances on Polygon.
+- `Scripts/env_doctor.py` — diagnostic script verifying RPC URL, private keys, and contract address config.
+- `Scripts/generate_dataset.py` — populates transit fare matrix datasets.
+- `Scripts/keep_alive.py` — heartbeat utility for continuous node connectivity.
 
 ---
 
